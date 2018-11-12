@@ -1,0 +1,24 @@
+{
+  "name": "mn-presets",
+  "version": "0.0.1",
+  "description": "presets for minimalist-notation",
+  "keywords": [
+    "presets",
+    "minimalist-notation",
+    "mn"
+  ],
+  "author": {
+    "name": "Absolutely Amir",
+    "email": "mr.amirka@ya.ru",
+    "url": "https://github.com/mr-amirka"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mr-amirka/mn-presets.git"
+  },
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "minimalist-notation": "*"
+  }
+}
