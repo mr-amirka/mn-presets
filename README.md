@@ -206,7 +206,7 @@ Base format: ``` {baseName}{sideName}{value} ```
 | rb          | right, bottom       |                       |
 
 
-js```
+```js
 
 const defaultSides = reduce({
   '': [ '' ],
