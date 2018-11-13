@@ -379,8 +379,40 @@ const defaultSides = reduce({
 | col         | &{width:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |
 | coll         | &{margin-left:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |
 | colr         | &{margin-right:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |
-| ft        | &{filter: {funcName}({value}px)}    |             | {funcName:camelCase}{value:([0-9]+)}    | 4px (4)             |
 | ratio       | &{position: relative; padding-top: calc({height}/{width}% + {addition}px)} &>*{position: absolute; top: 0; bottom: 0; left: 0; right: 0} |             | {width:([0-9]+)}x{height:([0-9]+)}[-+]{addition([0-9]+)} | 100% (1, 1, 0)      |
+
+
+** ft **
+
+```js
+((essences) => {
+  const regexpName = /^([A-Za-z]+)([0-9]*)(.*)$/;
+  const regexpSep = /_+/;
+  mn('ft', p => ({
+    style: {
+      filter: lowerFirst(p.suffix).split(regexpSep).map(v => {
+        if (!v) return '';
+        const matchs = regexpName.exec(v);
+        const funcName = matchs[1];
+        if (!funcName) return '';
+        const options = essences[funcName];
+        return camelToKebabCase(options && options[0] || funcName)
+          + '('  + (matchs[2] || options && options[1] || '')
+          + (matchs[3] || options && options[2] || '') + ') ';
+      }).join('') + p.i
+    }
+  }));
+})({
+  blur: [ 'blur', 4, 'px' ],
+  gray: [ 'grayscale', 100, '%' ],
+  bright: [ 'brightness', 100, '%' ],
+  contrast: [ 'contrast', 100, '%' ],
+  hue: [ 'hue-rotate', 180, 'deg' ],
+  invert: [ 'invert', 100, '%' ],
+  saturate: [ 'saturate', 100, '%' ],
+  sepia: [ 'sepia', 100, '%' ]
+});
+```
 
 
 
