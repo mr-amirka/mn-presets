@@ -35,8 +35,8 @@ Are you interested in the development of this project? Do your [bit](https://yas
 
 #### Prefixes
 
-[https://github.com/mr-amirka/mn-presets/blob/master/prefixes.js](mn-presets/prefixes.js)  
-[https://github.com/mr-amirka/mn-presets/blob/master/runtime-prefixes.js](mn-presets/runtime-prefixes.js)  
+[mn-presets/prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/prefixes.js)  
+[mn-presets/runtime-prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/runtime-prefixes.js)  
 
 
 ```js
