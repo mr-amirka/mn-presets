@@ -59,7 +59,7 @@ module.exports = (mn) => {
 
 #### Media queries
 
-[https://github.com/mr-amirka/mn-presets/blob/master/medias.js](mn-presets/medias.js)
+[mn-presets/medias.js](https://github.com/mr-amirka/mn-presets/blob/master/medias.js)
 
 
 ```js
@@ -120,7 +120,7 @@ Output:
 
 #### States
 
-[https://github.com/mr-amirka/mn-presets/blob/master/states.js](mn-presets/states.js)
+[mn-presets/states.js](https://github.com/mr-amirka/mn-presets/blob/master/states.js)
 
 
 | State name | Selectors                                        |
@@ -155,7 +155,7 @@ Output:
 #### Other default settings
 
 
-[https://github.com/mr-amirka/mn-presets/blob/master/theme.js](mn-presets/mn.theme.js)
+[mn-presets/mn.theme.js](https://github.com/mr-amirka/mn-presets/blob/master/theme.js)
 
 
 ```js
@@ -291,7 +291,7 @@ const defaultSides = reduce({
 #### Essences of styles
 
 
-[https://github.com/mr-amirka/mn-presets/blob/master/styles.js](mn-presets/styles.js)
+[mn-presets/styles.js](https://github.com/mr-amirka/mn-presets/blob/master/styles.js)
 
 
 
