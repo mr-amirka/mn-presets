@@ -51,5 +51,4 @@ module.exports = (mn) => {
 
     [ 'pt', 'print' ]
   ].forEach((v, i) => media[v[0]] = {query: v[1], priority: i});
-
 };
