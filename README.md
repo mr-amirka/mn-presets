@@ -382,7 +382,7 @@ const defaultSides = reduce({
 | ratio       | &{position: relative; padding-top: calc({height}/{width}% + {addition}px)} &>*{position: absolute; top: 0; bottom: 0; left: 0; right: 0} |             | {width:([0-9]+)}x{height:([0-9]+)}[-+]{addition([0-9]+)} | 100% (1, 1, 0)      |
 
 
-** ft **
+**ft**
 
 ```js
 ((essences) => {
