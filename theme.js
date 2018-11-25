@@ -15,6 +15,8 @@ module.exports = (mn) => {
   mn.assign({
     body: 'm0',
 
+    a: 'crPointer@d crDefault@m',
+
     'main, section, header, footer, nav, iframe, video': 'dBlock'
   });
 

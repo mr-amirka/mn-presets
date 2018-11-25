@@ -8,6 +8,7 @@ module.exports = (mn) => {
   flags(['-webkit-', '-moz-', '-o-',  '-ms-', '-khtml-' ], mn.propertiesStringify.prefixes);
   flags([
     'transform',
+    'transformStyle',
     'transitionDuration',
     'pointerEvents',
     'userSelect',

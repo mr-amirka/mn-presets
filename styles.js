@@ -347,7 +347,7 @@ module.exports = (mn) => {
   }
   */
 
-  const colorMatch = '^(([A-Z][a-z]+):camel|([A-F0-9]+):color):value(.*)?$';
+  const colorMatch = '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$';
   forIn({
     c: 'color',
     stroke: 'stroke',
@@ -459,19 +459,20 @@ module.exports = (mn) => {
   mn('x', p => {
     const scale = p.s;
     const angle = p.angle;
+    const z = p.z;
     return {
       style: {
         transform:
-          (angle ? (' rotate' + p.dir.toUpperCase() + '(' + angle + (p.unit || 'deg') + ') ') : '')
+          (angle ? ('rotate' + p.dir.toUpperCase() + '(' + angle + (p.unit || 'deg') + ') ') : '')
           + 'translate(' + ((p.x || '0') + (p.xu || 'px')) + ','
           + ((p.y || '0') + (p.yu || 'px')) + ')'
+          + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
           + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
-
           + p.i
       }
     };
 
-  }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
+  }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
 
   (() => {
     let uninited = true;
@@ -697,6 +698,7 @@ module.exports = (mn) => {
       e: [ 'pointer-events', 0 ],
       us: [ 'user-select', 0 ],
       v: [ 'visibility', 0 ],
+      ts: [ 'transform-style', 0 ],
 
       bsp: [ 'borderSpacing', 0 ]
 

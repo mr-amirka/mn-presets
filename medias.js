@@ -26,18 +26,18 @@ module.exports = (mn) => {
 
   [
     //mobile
-    [ 'm', '(max-width: 991px)' ],
-    [ 'm2', '(max-width: 767px)' ],
-    [ 'm3', '(max-width: 639px)' ],
-    [ 'm4', '(max-width: 479px)' ],
-    [ 'm5', '(max-width: 359px)' ],
-    [ 'm6', '(max-width: 319px)' ],
+    [ 'm', '(max-width: 992px)' ],
+    [ 'm2', '(max-width: 768px)' ],
+    [ 'm3', '(max-width: 640px)' ],
+    [ 'm4', '(max-width: 480px)' ],
+    [ 'm5', '(max-width: 360px)' ],
+    [ 'm6', '(max-width: 320px)' ],
 
-    [ 'm2-', '(min-width: 768px) and (max-width: 991px)' ],
-    [ 'm3-', '(min-width: 640px) and (max-width: 991px)' ],
-    [ 'm4-', '(min-width: 480px) and (max-width: 991px)' ],
-    [ 'm5-', '(min-width: 360px) and (max-width: 991px)' ],
-    [ 'm6-', '(min-width: 320px) and (max-width: 991px)' ],
+    [ 'm2-', '(min-width: 768px) and (max-width: 992px)' ],
+    [ 'm3-', '(min-width: 640px) and (max-width: 992px)' ],
+    [ 'm4-', '(min-width: 480px) and (max-width: 992px)' ],
+    [ 'm5-', '(min-width: 360px) and (max-width: 992px)' ],
+    [ 'm6-', '(min-width: 320px) and (max-width: 992px)' ],
 
     //desktop
     [ 'd', '(min-width: 992px)' ],
@@ -45,9 +45,9 @@ module.exports = (mn) => {
     [ 'd3', '(min-width: 1600px)' ],
     [ 'd4', '(min-width: 1920px)' ],
 
-    [ '-d4', '(min-width: 992px) and (max-width: 1919px)' ],
-    [ '-d3', '(min-width: 992px) and (max-width: 1599px)' ],
-    [ '-d2', '(min-width: 992px) and (max-width: 1199px)' ],
+    [ '-d4', '(min-width: 992px) and (max-width: 1920px)' ],
+    [ '-d3', '(min-width: 992px) and (max-width: 1600px)' ],
+    [ '-d2', '(min-width: 992px) and (max-width: 1200px)' ],
 
     [ 'pt', 'print' ]
   ].forEach((v, i) => media[v[0]] = {query: v[1], priority: i});
