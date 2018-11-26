@@ -17,7 +17,7 @@ module.exports = (mn) => {
 
     a: 'crPointer@d crDefault@m',
 
-    'main, section, header, footer, nav, iframe, video': 'dBlock'
+    'main, section, header, footer, nav, iframe, video, x': 'dBlock'
   });
 
   //mn.assign('[m~="container"]', '(mhAuto|ph10|w970@md|w1170@lg|w1570@ll)');

@@ -101,16 +101,16 @@ module.exports = (mn) => {
 
 Input:  
 ```html
-<div m="ph15 ph10@sm">...</div>
+<div m="ph15 ph10@m">...</div>
 ```
 Output:  
 ```css
-[m~='ph15@sm']{
+[m~='ph15']{
   padding-left: 15px;
   padding-right: 15px;
 }
 @media (max-width: 991px) {
-  [m~='ph10']{
+  [m~='ph10@m']{
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -382,6 +382,7 @@ const defaultSides = reduce({
 | ratio       | &{position: relative; padding-top: calc({height}/{width}% + {addition}px)} &>*{position: absolute; top: 0; bottom: 0; left: 0; right: 0} |             | {width:([0-9]+)}x{height:([0-9]+)}[-+]{addition([0-9]+)} | 100% (1, 1, 0)      |
 
 
+
 **ft**
 
 ```js
@@ -414,6 +415,32 @@ const defaultSides = reduce({
 });
 ```
 
+**Examples**  
+
+
+```html
+<div m="ftBlur3">...</div>
+```
+
+```css
+[m~='ftBlur3']{
+  filter: blur(3px);
+}
+```
+
+-------------------------
+
+```html
+<div m="ftGray50">...</div>
+```
+
+```css
+[m~='ftGray50']{
+  filter: grayscale(50%);
+}
+```
+
+-------------------------
 
 
 
