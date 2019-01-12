@@ -13,11 +13,13 @@ module.exports = (mn) => {
   });
 
   mn.assign({
+    html: 'rlv ffTheme',
     body: 'm0',
 
     a: 'crPointer@d crDefault@m',
 
-    'main, section, header, footer, nav, iframe, video, x': 'dBlock'
+    'input, textarea': 'ffTheme',
+    'input, textarea, main, section, header, footer, nav, iframe, video, img': 'dBlock'
   });
 
   //mn.assign('[m~="container"]', '(mhAuto|ph10|w970@md|w1170@lg|w1570@ll)');
