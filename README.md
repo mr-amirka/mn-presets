@@ -17,7 +17,7 @@
 
 
 Try this tests:
-* https://jsfiddle.net/dzgj2sL3/ 
+* https://jsfiddle.net/dzgj2sL3/
 * https://jsfiddle.net/j6d8aozy/46/  
 
 Home page: http://minimalist-notation.org  
@@ -129,7 +129,6 @@ Output:
 | i          | ::-webkit-input-placeholder, ::-moz-placeholder, :-ms-input-placeholder, ::placeholder  |
 | even       | :nth-child(2n)                                   |
 | odd        | :nth-child(2n+1)                                 |
-| even       | :nth-child(2n)                                   |
 | n          | :nth-child                                       |
 | first      | :first-child                                     |
 | last       | :last-child                                      |

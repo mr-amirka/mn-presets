@@ -586,7 +586,8 @@ module.exports = (mn) => {
 
   forIn({
     f: {prop: 'font-size', val: 14},
-    r: {prop: 'borderRadius', val: 10000}
+    r: {prop: 'borderRadius', val: 10000},
+    sw: {prop: 'strokeWidth', val: 0}
   }, (options, pfx) => {
     const val = options.val;
     const propName = options.prop;
