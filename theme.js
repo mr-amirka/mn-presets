@@ -34,7 +34,6 @@ module.exports = (mn) => {
     xs: {
       exts: [ 'vInline', 'cRed' ]
     }
-
   });
 
   */
