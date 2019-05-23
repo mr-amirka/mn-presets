@@ -1,14 +1,16 @@
 {
   "name": "mn-presets",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "presets for minimalist-notation",
   "keywords": [
+    "styles",
+    "css",
     "presets",
     "minimalist-notation",
     "mn"
   ],
   "author": {
-    "name": "Absolutely Amir",
+    "name": "Amir Absolutely",
     "email": "mr.amirka@ya.ru",
     "url": "https://github.com/mr-amirka"
   },
