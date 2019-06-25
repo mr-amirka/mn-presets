@@ -331,48 +331,46 @@ const defaultSides = reduce({
 | r           | &{border-radius:{value}{unit}}           | radius      | {value:([0-9]+)}{unit:([a-z]+)}                      | 10000px (10000, 'px') |
 | z           | &{z-index:{value}}                       |             | {value:(-?[0-9]+)}}                                  | 1                   |
 | o           | &{opacity:{value * 0.01}}                |             | {value:([0-9]+)}}                                    | 0                   |
-| rx          | &{rotateX:{value}{unit}}                 |             | {value:([0-9]+)}{unit:([a-z]+)}                      | 180deg (180, 'deg') |
-| ry          | &{rotateY:{value}{unit}}                 |             | {value:([0-9]+)}{unit:([a-z]+)}                      | 180deg (180, 'deg') |
-| rz          | &{rotateZ:{value}{unit}}                 |             | {value:([0-9]+)}{unit:([a-z]+)}                      | 180deg (180, 'deg') |
 | lh          | &{line-height:{value * 0.01}{unit == '%' ? '' : 'px'}} |             | {value:([0-9]+)}{unit:([a-z]+)}                      | 1  (100, '%')       |
-| tn          | &{transition:{value}}                              |             | {value:snackCase}                                    |                     |
-| g           | &{grid-template:{value}}                 |             | {value:snackCase}                                    |                     |
-| gr          | &{grid-template-rows:{value}}            |             | {value:snackCase}                                    |                     |
-| gc          | &{grid-template-columns:{value}}         |             | {value:snackCase}                                    |                     |
-| gar         | &{grid-auto-rows:{value}}                |             | {value:snackCase}                                    |                     |
-| gg          | &{grid-gap:{value}}                      |             | {value:snackCase}                                    |                     |
-| gRow        | &{grid-row:{value}}                      |             | {value:snackCase}                                    |                     |
-| gCol        | &{grid-column:{value}}                   |             | {value:snackCase}                                    |                     |
-| fx          | &{flex:{value}}                          |             | {value:snackCase}                                    |                     |
-| tp          | &{transition-property:{value}}           |             | {value:snackCase}                                    |                     |
-| bgp         | &{background-position:{value}}           |             | {value:snackCase}                                    |                     |
-| bgpx        | &{transition-propertyX:{value}}          |             | {value:snackCase}                                    |                     |
-| bgpy        | &{transition-propertyY:{value}}          |             | {value:snackCase}                                    |                     |
-| bgs         | &{background-size:{value}}               |             | {value:snackCase}                                    |                     |
-| bga         | &{background-attachment:{value}}         |             | {value:snackCase}                                    |                     |
-| bgr          | &{background-repeat:{value}}           |             | {value:snackCase}                                    |                     |
-| bgrx          | &{background-repeat-x:{value}}           |             | {value:snackCase}                                    |                     |
-| bgry          | &{background-repeat-y:{value}}           |             | {value:snackCase}                                    |                     |
-| ctt         | &{content:{value}}                       |             | {value:snackCase}                                    |                     |
-| rs          | &{border-radius:{value}}                 | radius      | {value:snackCase}                                    |                     |
-| ov          | &{overflow:{value}}                      |             | {value:snackCase}                                    |                     |
-| ovx         | &{overflow-x:{value}}                    |             | {value:snackCase}                                    |                     |
-| ovy         | &{overflow-y:{value}}                    |             | {value:snackCase}                                    |                     |
-| fd          | &{flex-direction:{value}}                |             | {value:snackCase}                                    |                     |
-| jc          | &{justify-content:{value}}               |             | {value:snackCase}                                    |                     |
-| ai          | &{align-items:{value}}                   |             | {value:snackCase}                                    |                     |
-| tt          | &{text-transform:{value}}                |             | {value:snackCase}                                    |                     |
-| td          | &{text-decoration:{value}}               |             | {value:snackCase}                                    |                     |
-| to          | &{text-overflow:{value}}                 |             | {value:snackCase}                                    |                     |
-| cr          | &{cursor :{value}}                       |             | {value:snackCase}                                    |                     |
-| ol          | &{outline:{value}}                       |             | {value:snackCase}                                    |                     |
-| ws          | &{white-space:{value}}                   |             | {value:snackCase}                                    |                     |
-| va          | &{vertical-align:{value}}                |             | {value:snackCase}                                    |                     |
-| d           | &{display:{value}}                       |             | {value:snackCase}                                    |                     |
-| e           | &{pointer-events:{value}}                |             | {value:snackCase}                                    |                     |
-| us          | &{user-select:{value}}                   |             | {value:snackCase}                                    |                     |
-| v           | &{visibility:{value}}                    |             | {value:snackCase}                                    |                     |
-| bsp         | &{border-spacing:{value}}                |             | {value:snackCase}                                    |                     |
+| tn          | &{transition:{value}}                              |             | {value:camelCase}                                    |                     |
+| g           | &{grid-template:{value}}                 |             | {value:camelCase}                                    |                     |
+| gr          | &{grid-template-rows:{value}}            |             | {value:camelCase}                                    |                     |
+| gc          | &{grid-template-columns:{value}}         |             | {value:camelCase}                                    |                     |
+| gar         | &{grid-auto-rows:{value}}                |             | {value:camelCase}                                    |                     |
+| gg          | &{grid-gap:{value}}                      |             | {value:camelCase}                                    |                     |
+| gRow        | &{grid-row:{value}}                      |             | {value:camelCase}                                    |                     |
+| gCol        | &{grid-column:{value}}                   |             | {value:camelCase}                                    |                     |
+| fx          | &{flex:{value}}                          |             | {value:camelCase}                                    |                     |
+| tp          | &{transition-property:{value}}           |             | {value:camelCase}                                    |                     |
+| bgp         | &{background-position:{value}}           |             | {value:camelCase}                                    |                     |
+| bgpx        | &{transition-propertyX:{value}}          |             | {value:camelCase}                                    |                     |
+| bgpy        | &{transition-propertyY:{value}}          |             | {value:camelCase}                                    |                     |
+| bgs         | &{background-size:{value}}               |             | {value:camelCase}                                    |                     |
+| bga         | &{background-attachment:{value}}         |             | {value:camelCase}                                    |                     |
+| bgr          | &{background-repeat:{value}}           |             | {value:camelCase}                                    |                     |
+| bgrx          | &{background-repeat-x:{value}}           |             | {value:camelCase}                                    |                     |
+| bgry          | &{background-repeat-y:{value}}           |             | {value:camelCase}                                    |                     |
+| ctt         | &{content:{value}}                       |             | {value:camelCase}                                    |                     |
+| rs          | &{border-radius:{value}}                 | radius      | {value:camelCase}                                    |                     |
+| ov          | &{overflow:{value}}                      |             | {value:camelCase}                                    |                     |
+| ovx         | &{overflow-x:{value}}                    |             | {value:camelCase}                                    |                     |
+| ovy         | &{overflow-y:{value}}                    |             | {value:camelCase}                                    |                     |
+| fd          | &{flex-direction:{value}}                |             | {value:camelCase}                                    |                     |
+| jc          | &{justify-content:{value}}               |             | {value:camelCase}                                    |                     |
+| ai          | &{align-items:{value}}                   |             | {value:camelCase}                                    |                     |
+| tt          | &{text-transform:{value}}                |             | {value:camelCase}                                    |                     |
+| td          | &{text-decoration:{value}}               |             | {value:camelCase}                                    |                     |
+| to          | &{text-overflow:{value}}                 |             | {value:camelCase}                                    |                     |
+| cr          | &{cursor :{value}}                       |             | {value:camelCase}                                    |                     |
+| ol          | &{outline:{value}}                       |             | {value:camelCase}                                    |                     |
+| ws          | &{white-space:{value}}                   |             | {value:camelCase}                                    |                     |
+| va          | &{vertical-align:{value}}                |             | {value:camelCase}                                    |                     |
+| d           | &{display:{value}}                       |             | {value:camelCase}                                    |                     |
+| e           | &{pointer-events:{value}}                |             | {value:camelCase}                                    |                     |
+| us          | &{user-select:{value}}                   |             | {value:camelCase}                                    |                     |
+| v           | &{visibility:{value}}                    |             | {value:camelCase}                                    |                     |
+| bsp         | &{border-spacing:{value}}                |             | {value:camelCase}                                    |                     |
+| mbm         | &{mix-blend-mode:{value}}                |             | {value:camelCase}                                    |                     |
 | col         | &{width:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |
 | coll         | &{margin-left:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |
 | colr         | &{margin-right:{100 * colSize / fullSize}%}     | column      | {colSize:([0-9]+)}/{fullSize:([0-9]+)}               | 100% (12, 12)       |

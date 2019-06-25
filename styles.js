@@ -3,7 +3,6 @@
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
-
 const reTrimSnackLeft = /^_+/g;
 const reTrimKebabLeft = /^-+/g;
 
@@ -128,13 +127,6 @@ module.exports = (mn) => {
     })();
 
 
-    /*
-    //border-color
-    @each $key, $value in (
-        (1, transparent),
-    )
-    { @include side-focus('.bc' + $key, border, $value, '-color'); }
-    */
     (() => {
       const propsMap = {};
       for (let propSide in sides) {
@@ -154,37 +146,6 @@ module.exports = (mn) => {
     })();
 
   });
-
-
-  /*
-  //spaces
-  @each $size in (20, 25, 34, 40, 55, 150){
-     .sq#{$size}{
-         width: $size + px;
-         height: $size + px;
-     }
-  }
-  #{'.w' +  $suffix} { width: 100%; }
-  #{'.min-w' + $suffix} { min-width: 100%; }
-  #{'.max-w' + $suffix} { max-width: 100%; }
-
-
-  @each $size in 70 {
-    #{'.w' + $size + $suffix} { width:$size + px; }
-    #{'.min-w' + $size + $suffix} { min-width:$size + px; }
-    #{'.max-w' + $size + $suffix} { max-width:$size + px; }
-  }
-
-
-  #{'.h' +  $suffix} { height: 100%; }
-  #{'.hMin' + $suffix} { hMineight: 100%; }
-  #{'.max-h' + $suffix} { max-height: 100%; }
-  @each $size in 0, 34, 40, 50, 70, 90, 100, 130 {
-    #{'.h' + $size + $suffix} { height:$size + px; }
-    #{'.hMin' + $size + $suffix} { hMineight:$size + px; }
-    #{'.max-h' + $size + $suffix} { max-height:$size + px; }
-  }
-  */
 
   const matchWidthCalc = '(([-+]):sign([0-9]+):add)$';
   forIn({
@@ -332,21 +293,6 @@ module.exports = (mn) => {
   })
 
 
-
-  /*
-
-  //color
-  @each $index, $color in (
-    (1,#FFF), (2,#000), (3,#d6d6d6),
-    (4,#6e91b7), (5,#39383d), (6,#6a6a6a),
-    (7,#3b7aa9), (8, #ac3032),
-  ) {
-    .c#{$index}, .c#{$index}-h:hover{
-        color: $color !important;
-    }
-  }
-  */
-
   const colorMatch = '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$';
   forIn({
     c: 'color',
@@ -364,17 +310,6 @@ module.exports = (mn) => {
   });
 
 
-  /*
-  //background color
-  @each $index, $color in (
-    (1,#FFF), (2,#000), (3,#d6d6d6),
-    (4,#6e91b7), (5,#f2f2f2), (6,#5b92ba), (7,#e30613)
-  ) {
-    .bg#{$index}, .bg#{$index}-h:hover{
-        background-color: $color !important;
-    }
-  }
-  */
   const getBackground = __color.getBackground;
   mn('bg', p => {
     const v = p.suffix;
@@ -387,17 +322,6 @@ module.exports = (mn) => {
       }
     };
   });
-
-
-  /*
-  .tl#{$suffix}{text-align:left;}
-  .tc#{$suffix}{text-align:center;}
-  .tr#{$suffix}{text-align:right;}
-
-  .lt#{$suffix},[class*='tbl']>.lt#{$suffix}{float:left !important;}
-  .ct#{$suffix}{margin-left:auto;margin-right:auto;}
-  .rt#{$suffix},[class*='tbl']>.rt#{$suffix}{float:right !important;}
-  */
 
   forIn({
     textAlign: {
@@ -425,17 +349,6 @@ module.exports = (mn) => {
   });
 
 
-  /*
-  .fw9#{$suffix}{font-weight:900;}
-  .fw8#{$suffix}{font-weight:800;}
-  .fw7#{$suffix}{font-weight:700;}
-  .fw6#{$suffix}{font-weight:600;}
-  .fw5#{$suffix}{font-weight:500;}
-  .fw4#{$suffix}{font-weight:400;}
-  .fw3#{$suffix}{font-weight:300;}
-  .fw2#{$suffix}{font-weight:200;}
-  .fw1#{$suffix}{font-weight:100;}
-  */
   mn('fw', p => {
     if (p.negative) return;
     const camel = p.camel;
@@ -505,8 +418,6 @@ module.exports = (mn) => {
   });
 
 
-
-
   mn('break', {
     style: {
       whiteSpace: 'normal',
@@ -515,11 +426,6 @@ module.exports = (mn) => {
   });
 
 
-
-  //.shadow1{
-  //  @include echo( cross(box-shadow,inset 0px 0px 10px 5px rgba(0, 0, 0, .15)) );
-  //}
-  //.sh10-5c0001
   (() => {
     const matchs = [
       '((r|R)(\\-?[0-9]+):r)',
@@ -572,18 +478,6 @@ module.exports = (mn) => {
   })();
 
 
-  /*
-  //font-size
-  @each $size in 10, 11, 12, 13, 14, 16, 17, 18, 20, 22, 24, 26, 30, 36, 40, 50, 60, 80
-  { #{'.f' + $size + $suffix} { font-size:$size + px; } }
-  */
-
-  /*
-  //border-radius
-  .r{border-radius: 10000px;};
-  @each $size in 0, 3, 4, 5, 10, 15, 20 { #{'.r' + $size} { border-radius:$size + px; } }
-  */
-
   forIn({
     f: {prop: 'font-size', val: 14},
     r: {prop: 'borderRadius', val: 10000},
@@ -599,11 +493,6 @@ module.exports = (mn) => {
     });
   });
 
-  /*
-  //z-index
-  @each $size in -1, 0, 1, 2 { #{'.z' + $size} { z-index:$size; } }
-  */
-
   mn('z', p => {
     return p.camel ? null : {
       style: {
@@ -612,16 +501,6 @@ module.exports = (mn) => {
     };
   });
 
-
-
-  /*
-  //opacity
-  .o,.o-h:hover{ @include opacity(0); }
-  .no-o,.no-o-h:hover{ @include opacity(1); }
-  @each $size in 50, 70, 90 {
-    #{'.o' + $size}, #{'.o' + $size + '-h:hover'} { @include opacity( 0.01 * $size ); }
-  }
-  */
   mn('o', p => {
     if (p.camel || p.negative) return;
     return {
@@ -629,13 +508,6 @@ module.exports = (mn) => {
     };
   });
 
-
-
-  /*
-  .lh{line-height:1;}
-  //line-height
-  @each $size in 6, 7, 8, 9, 10, 11, 12, 13 { #{'.lh' + $size} { &, &>*{ line-height: 0.1 * $size; } } }
-  */
   mn('lh', p => {
     const num = p.num;
     const unit = p.unit;
@@ -645,7 +517,6 @@ module.exports = (mn) => {
       }
     };
   });
-
 
   (() => {
     const replacer = (all, escaped) => escaped ? '_' : ' ';
@@ -700,6 +571,7 @@ module.exports = (mn) => {
       us: [ 'user-select', 0 ],
       v: [ 'visibility', 0 ],
       ts: [ 'transform-style', 0 ],
+      mbm: [ 'mix-blend-mode', 0 ],
 
       bsp: [ 'borderSpacing', 0 ]
 
@@ -745,19 +617,6 @@ module.exports = (mn) => {
     });
   })();
 
-  /*
-  %lt#{$suffix}{float: left;}
-  $i: 12;
-  @while $i > 0 {
-    .col#{$suffix}-#{$i}{
-      @extend %lt#{$suffix};
-      width: 100 * $i / 12  + %;
-    }
-    .col#{$suffix}-offset-#{$i}{ margin-left: 100 * $i / 12  + %;}
-    $i: $i - 1;
-  }
-  */
-
   forIn({
     '': 'width',
     'l': 'marginLeft',
@@ -801,13 +660,11 @@ module.exports = (mn) => {
     sepia: [ 'sepia', 100, '%' ]
   });
 
-
-
   mn('ratio', p => {
     return p.negative || p.camel ? null : {
       style: {
         position: 'relative' + p.i,
-        paddingTop: 'calc(' + (100 * intval(p.oh || p.h, 1, 1) / intval(p.w || 100, 1, 1))  + '% ' + (p.sign || '+') + ' ' + (p.add || '0') + 'px)' + p.i
+        paddingTop: 'calc(' + (100 * intval(p.oh || p.h, 100, 1) / intval(p.w || 100, 1, 1))  + '% ' + (p.sign || '+') + ' ' + (p.add || '0') + 'px)' + p.i
       },
       childs: {
         overlay: {
