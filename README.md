@@ -518,8 +518,8 @@ const defaultSides = reduce({
 
 ```css
 [m~='sv20']{
-  left: 20px;
-  right: 20px;
+  top: 20px;
+  bottom: 20px;
 }
 ```
 
