@@ -152,7 +152,7 @@ Output:
 #### Other default settings
 
 
-[mn-presets/mn.theme.js](https://github.com/mr-amirka/mn-presets/blob/master/theme.js)
+[mn-presets/theme.js](https://github.com/mr-amirka/mn-presets/blob/master/theme.js)
 
 
 ```js
