@@ -503,8 +503,12 @@ module.exports = (mn) => {
 
   mn('o', p => {
     if (p.camel || p.negative) return;
+    const opacity = (p.num || 0), important =  p.i;
     return {
-      style: { opacity: '' + ((p.num || 0) * 0.01) + p.i }
+      style: {
+        filter: 'alpha(opacity=' + opacity + ')' + important,
+        opacity: '' + (opacity * 0.01) + important
+      }
     };
   });
 

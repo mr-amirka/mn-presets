@@ -13,6 +13,7 @@ module.exports = (mn) => {
     'pointerEvents',
     'userSelect',
     'filter',
+    'opacity',
     'boxSizing'
   ], mn.propertiesStringify.prefixedAttrs);
 };
