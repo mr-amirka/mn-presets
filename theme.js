@@ -13,13 +13,11 @@ module.exports = (mn) => {
   });
 
   mn.assign({
-    html: 'rlv ffTheme',
-    body: 'm0',
-
+    html: 'ovxHidden',
+    body: 'm0 ovxHidden',
     a: 'crPointer@d crDefault@m',
-
-    'input, textarea': 'ffTheme',
-    'input, textarea, main, section, header, footer, nav, iframe, video, img': 'dBlock'
+    img: 'wmax dBlock mhAuto b0',
+    'input, textarea, main, section, header, footer, nav, iframe, video': 'dBlock'
   });
 
   //mn.assign('[m~="container"]', '(mhAuto|ph10|w970@md|w1170@lg|w1570@ll)');
