@@ -4,7 +4,7 @@
  */
 
 module.exports = (mn) => {
-  const media = mn.media;
+  const {media} = mn;
 /*
   [
     [ 'sm', '(max-width: 991px)' ],

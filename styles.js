@@ -5,10 +5,11 @@
 
 const reTrimSnackLeft = /^_+/g;
 const reTrimKebabLeft = /^-+/g;
+const snackLeftTrim = (v) => v.replace(reTrimSnackLeft, '');
 
 module.exports = (mn) => {
 
-  const utils = mn.utils;
+  const {utils, setKeyframes} = mn;
   const {
     extend,
     forIn,
@@ -19,13 +20,15 @@ module.exports = (mn) => {
     size,
     intval,
     reduce,
-    splitProvider
+    splitProvider,
+    color: getColor,
+    colorGetBackground,
   } = utils;
 
-  const sidesIteratee = (dst, sideName) => {
+  function sidesIteratee(dst, sideName) {
     dst[sideName ? ('-' + sideName) : sideName] = 1;
     return dst;
-  };
+  }
   const defaultSides = reduce({
     '': [ '' ],
     t: [ 'top' ],
@@ -49,9 +52,6 @@ module.exports = (mn) => {
     dst[sideKey] = reduce(sides, sidesIteratee, {});
     return dst;
   }, {});
-
-  const __color = utils.color;
-  const mnKeyframes = mn.setKeyframes;
 
   forIn(defaultSides, (sides, suffix) => {
     const priority = suffix ? (4 - size(sides)) : 0;
@@ -133,7 +133,7 @@ module.exports = (mn) => {
         propsMap['border' + propSide + '-color'] = 1;
       }
       mn('bc' + suffix, p => {
-        let alts = __color(p.camel || p.color || '0');
+        let alts = getColor(p.camel || p.color || '0');
         const important = p.i;
         if (important) alts = joinArrays([], alts, [ important ]);
         const style = {};
@@ -300,7 +300,7 @@ module.exports = (mn) => {
     fill: 'fill'
   }, (propName, pfx) => {
     mn(pfx, p => {
-      let alts = __color(p.value || '0');
+      let alts = getColor(p.value || '0');
       const important = p.i;
       if (important) alts = joinArrays([], alts, [ important ]);
       const style = {};
@@ -309,18 +309,27 @@ module.exports = (mn) => {
     }, colorMatch);
   });
 
-
-  const getBackground = __color.getBackground;
+  // background: (...)
   mn('bg', p => {
     const v = p.suffix;
     if (p.negative || !v) return;
-    let alts = getBackground(v);
+    let alts = colorGetBackground(v);
     const important = p.i
     return {
       style: {
         background: important ? joinArrays([], alts, [ important ]) : alts
       }
     };
+  });
+
+  // background: url(...)
+  mn('bgu', p => {
+    const url = snackLeftTrim(p.suffix);
+    return url ? {
+      style: {
+        background: 'url("' + url + '")' + p.i
+      }
+    } : null;
   });
 
   forIn({
@@ -395,7 +404,7 @@ module.exports = (mn) => {
 
       if (uninited) {
         uninited = false;
-        mnKeyframes('spinner-animate', {
+        setKeyframes('spinner-animate', {
           from: { transform: 'rotateZ(0deg)' },
           to: { transform: 'rotateZ(360deg)' }
         });
@@ -455,7 +464,7 @@ module.exports = (mn) => {
         if (!value || repeatCount < 1) return;
 
         const important = p.i;
-        const colors = __color(p.c || '0');
+        const colors = getColor(p.c || '0');
         const prefixIn = p.in ? 'inset ' : '';
         const colorsLength = colors.length;
         const output = new Array(colorsLength);
@@ -479,16 +488,15 @@ module.exports = (mn) => {
 
 
   forIn({
-    f: {prop: 'font-size', val: 14},
-    r: {prop: 'borderRadius', val: 10000},
-    sw: {prop: 'strokeWidth', val: 0}
+    f: ['font-size', 14],
+    r: ['borderRadius', 10000],
+    sw: ['strokeWidth', 0],
   }, (options, pfx) => {
-    const val = options.val;
-    const propName = options.prop;
+    const [propName, defaultValue] = options;
     mn(pfx, p => {
       if (p.camel || p.negative) return null;
       const style = {};
-      style[propName] = (p.num || val) + (p.unit || 'px') + p.i;
+      style[propName] = (p.num || defaultValue) + (p.unit || 'px') + p.i;
       return {style};
     });
   });
@@ -582,8 +590,7 @@ module.exports = (mn) => {
     }, ([ propName, priority ], essenceName) => {
       mn(essenceName, p => {
         const style = {};
-        style[propName] = camelToKebabCase(lowerFirst((p.suffix || ''))
-          .replace(reTrimSnackLeft, ''))
+        style[propName] = snackLeftTrim(camelToKebabCase(lowerFirst((p.suffix || ''))))
           .replace(regexp, replacer) + p.i;
         return { style, priority: priority || 0 };
       });
@@ -593,10 +600,9 @@ module.exports = (mn) => {
     mn('ff', p => {
       return {
         style: {
-          fontFamily: (p.suffix || '')
-            .replace(reTrimSnackLeft, '')
+          fontFamily: snackLeftTrim(p.suffix || '')
             .replace(regexp, replacer)
-            .split(/[\s,]+/)
+            .split(/(\s*,\s*)+/)
             .map(__wr).join(',') + p.i
         }
       };
@@ -606,7 +612,7 @@ module.exports = (mn) => {
       let s = p.suffix;
       return {
         style: {
-          content: (s ? ('"' + (s.replace(reTrimSnackLeft, '') || ' ')
+          content: (s ? ('"' + (snackLeftTrim(s) || ' ')
             .replace(regexp, replacer) + '"') : 'none') + p.i
         }
       };
@@ -615,7 +621,7 @@ module.exports = (mn) => {
       let s = p.suffix;
       return s ? {
         style: {
-          borderRadius: s.replace(reTrimSnackLeft, '').replace(regexp, replacer) + p.i
+          borderRadius: snackLeftTrim(s).replace(regexp, replacer) + p.i
         }
       } : null;
     });
@@ -677,7 +683,5 @@ module.exports = (mn) => {
         }
       }
     };
-
   }, '((((\\d+):w)x((\\d+):h))|(\\d+):oh)?(([-+]):sign(\\d+):add)?');
-
 };

@@ -1,6 +1,6 @@
 {
   "name": "mn-presets",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "presets for minimalist-notation",
   "keywords": [
     "styles",
@@ -16,11 +16,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mr-amirka/mn-presets.git"
+    "url": "https://github.com/mr-amirka/mn-presets.git"
   },
   "license": "MIT",
   "devDependencies": {},
-  "dependencies": {
-    "minimalist-notation": "*"
-  }
+  "dependencies": {}
 }

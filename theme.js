@@ -21,20 +21,4 @@ module.exports = (mn) => {
   });
 
   //mn.assign('[m~="container"]', '(mhAuto|ph10|w970@md|w1170@lg|w1570@ll)');
-
-  /*
-  mn({
-    ffTheme: {
-      style: {
-        fontFamily: "'Exo Two', 'Open Sans', 'Roboto', Arial, sans-serif"
-      }
-    },
-    xs: {
-      exts: [ 'vInline', 'cRed' ]
-    }
-  });
-
-  */
-
-
 };

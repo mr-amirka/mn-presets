@@ -4,10 +4,11 @@
  */
 
 module.exports = (mn) => {
-  const { flags } = mn.utils;
+  const {utils, propertiesStringify} = mn;
+  const {flags} = utils;
   const style = document.createElement('div').style;
-  const prefixes = mn.propertiesStringify.prefixes;
-  [ 'webkit', 'moz', 'o',  'ms', 'khtml' ].forEach((prefix) => {
+  const prefixes = propertiesStringify.prefixes;
+  ['webkit', 'moz', 'o',  'ms', 'khtml'].forEach((prefix) => {
   	if (style[prefix + 'Transform'] !== undefined) prefixes['-' + prefix + '-'] = true;
   });
   flags([
@@ -17,5 +18,5 @@ module.exports = (mn) => {
     'userSelect',
     'filter',
     'boxSizing'
-  ], mn.propertiesStringify.prefixedAttrs);
+  ], propertiesStringify.prefixedAttrs);
 };

@@ -4,8 +4,10 @@
  */
 
 module.exports = (mn) => {
-  const { flags } = mn.utils;
-  flags(['-webkit-', '-moz-', '-o-',  '-ms-', '-khtml-' ], mn.propertiesStringify.prefixes);
+  const {utils, propertiesStringify} = mn;
+  const {flags} = utils;
+
+  flags(['-webkit-', '-moz-', '-o-',  '-ms-', '-khtml-'], propertiesStringify.prefixes);
   flags([
     'transform',
     'transformStyle',
@@ -14,6 +16,6 @@ module.exports = (mn) => {
     'userSelect',
     'filter',
     'opacity',
-    'boxSizing'
-  ], mn.propertiesStringify.prefixedAttrs);
+    'boxSizing',
+  ], propertiesStringify.prefixedAttrs);
 };
