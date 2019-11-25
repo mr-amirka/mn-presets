@@ -602,7 +602,7 @@ module.exports = (mn) => {
         style: {
           fontFamily: snackLeftTrim(p.suffix || '')
             .replace(regexp, replacer)
-            .split(/(\s*,\s*)+/)
+            .split(/(?:\s*,\s*)+/)
             .map(__wr).join(',') + p.i
         }
       };
