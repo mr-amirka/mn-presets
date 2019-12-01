@@ -5,14 +5,19 @@
 
 const reTrimSnackLeft = /^_+/g;
 const reTrimKebabLeft = /^-+/g;
-const snackLeftTrim = (v) => v.replace(reTrimSnackLeft, '');
+
+function snackLeftTrim(v) {
+  return v.replace(reTrimSnackLeft, '');
+}
+function toFixed(v) {
+  return v.toFixed(2);
+}
 
 module.exports = (mn) => {
-
   const {utils, setKeyframes} = mn;
   const {
-    extend,
     forIn,
+    forEach,
     joinArrays,
     upperFirst,
     lowerFirst,
@@ -20,7 +25,6 @@ module.exports = (mn) => {
     size,
     intval,
     reduce,
-    splitProvider,
     color: getColor,
     colorGetBackground,
   } = utils;
@@ -30,24 +34,24 @@ module.exports = (mn) => {
     return dst;
   }
   const defaultSides = reduce({
-    '': [ '' ],
-    t: [ 'top' ],
-    b: [ 'bottom' ],
-    l: [ 'left' ],
-    r: [ 'right' ],
+    '': [''],
+    't': ['top'],
+    'b': ['bottom'],
+    'l': ['left'],
+    'r': ['right'],
 
-    v: [ 'top', 'bottom' ],
-    vl: [ 'top', 'bottom', 'left' ],
-    vr: [ 'top', 'bottom', 'right' ],
+    'v': ['top', 'bottom'],
+    'vl': ['top', 'bottom', 'left'],
+    'vr': ['top', 'bottom', 'right'],
 
-    h: [ 'left', 'right' ],
-    ht: [ 'left', 'right', 'top' ],
-    hb: [ 'left', 'right', 'bottom' ],
+    'h': ['left', 'right'],
+    'ht': ['left', 'right', 'top'],
+    'hb': ['left', 'right', 'bottom'],
 
-    lt: [ 'top', 'left' ],
-    rt: [ 'top', 'right' ],
-    lb: [ 'bottom', 'left' ],
-    rb: [ 'bottom', 'right' ]
+    'lt': ['top', 'left'],
+    'rt': ['top', 'right'],
+    'lb': ['bottom', 'left'],
+    'rb': ['bottom', 'right'],
   }, (dst, sides, sideKey) => {
     dst[sideKey] = reduce(sides, sidesIteratee, {});
     return dst;
@@ -56,19 +60,17 @@ module.exports = (mn) => {
   forIn(defaultSides, (sides, suffix) => {
     const priority = suffix ? (4 - size(sides)) : 0;
 
-
     forIn({
-      p: [ 'padding' ],
-      m: [ 'margin' ],
-      b: [ 'border', '-width' ],
+      p: ['padding'],
+      m: ['margin'],
+      b: ['border', '-width'],
     }, (args, pfx) => {
       const propName = args[0];
       const propSuffix = args[1] || '';
       const propsMap = {};
-      for (let propSide in sides) {
-        propsMap[ propName + propSide + propSuffix] = 1;
-      }
-      mn(pfx + suffix, p => {
+      let propSide;
+      for (propSide in sides) propsMap[propName + propSide + propSuffix] = 1; //eslint-disable-line
+      mn(pfx + suffix, (p) => {
         const camel = p.camel;
         const v = (camel ? camel.toLowerCase() : ((p.value || '0') + (p.unit || 'px'))) + p.i;
         const style = {};
@@ -82,32 +84,30 @@ module.exports = (mn) => {
 
     (() => {
       const propsMap = {};
+      let propSide;
       if (suffix) {
-        for (let propSide in sides) {
-          propsMap[ propSide.replace(reTrimKebabLeft, '') ] = 1;
-        }
+        // eslint-disable-next-line
+        for (propSide in sides) propsMap[propSide.replace(reTrimKebabLeft, '')] = 1;
       } else {
         propsMap.top = propsMap.bottom = propsMap.left = propsMap.right = 1;
       }
 
-      mn('s' + suffix, p => {
+      mn('s' + suffix, (p) => {
         const camel = p.camel;
-        const v = (camel ? camel.toLowerCase() : ((p.value || '0') + (p.unit || 'px'))) + p.i;
+        const v = (camel
+          ? camel.toLowerCase()
+          : ((p.value || '0') + (p.unit || 'px'))
+        ) + p.i;
         const style = {};
-        for (let pName in propsMap) style[pName] = v;
+        let pName;
+        for (pName in propsMap) style[pName] = v; // eslint-disable-line
         return {
           style,
-          priority
+          priority,
         };
       });
     })();
 
-
-    /*
-    .dotted{border-style: dotted;}
-    .dashed{border-style: dashed;}
-    .solid{border-style: solid;}
-    */
     (() => {
       const propsMap = {};
       for (let propSide in sides) {
@@ -126,7 +126,6 @@ module.exports = (mn) => {
       });
     })();
 
-
     (() => {
       const propsMap = {};
       for (let propSide in sides) {
@@ -144,37 +143,38 @@ module.exports = (mn) => {
         };
       }, '([A-F0-9]+):color');
     })();
-
   });
 
   const matchWidthCalc = '(([-+]):sign([0-9]+):add)$';
   forIn({
-    sq:  [ 'width', 'height' ],
-    w: [ 'width' ],
-    h: [ 'height' ]
+    sq: ['width', 'height'],
+    w: ['width'],
+    h: ['height'],
   }, (props, essencePrefix) => {
     const length = props.length;
     const priority = 4 - length;
-    [ '', 'min', 'max' ].forEach((sfx) => {
+    forEach(['', 'min', 'max'], (sfx) => {
       const propMap = {};
-      for (let propName, i = 0; i < length; i++) {
+      let propName, i = 0; // eslint-disable-line
+      for (; i < length; i++) {
         propName = props[i];
         propMap[sfx ? (sfx + '-' + propName) : propName] = 1;
       }
-      mn(essencePrefix + sfx, p => {
+      mn(essencePrefix + sfx, (p) => {
         if (p.negative) return;
         const sign = p.sign;
         const num = p.num;
         const camel = p.camel;
         const unit = p.unit || 'px';
+        const style = {};
+        let propName;
         let sz = camel ? camel.toLowerCase() : (num ? (num + unit) : '100%');
         if (sign) sz = 'calc(' + sz + ' ' + sign + ' ' + p.add + 'px)';
         sz += p.i;
-        const style = {};
-        for (let propName in propMap) style[propName] = sz;
+        for (propName in propMap) style[propName] = sz; // eslint-disable-line
         return {
           style,
-          priority
+          priority,
         };
       }, matchWidthCalc);
     });
@@ -184,25 +184,24 @@ module.exports = (mn) => {
     style: {display: 'table'},
   });
   mn('tbl.cell', {
-    selectors: [ '>*' ],
+    selectors: ['>*'],
     style: {
       display: 'table-cell',
-      verticalAlign: 'middle'
-    }
+      verticalAlign: 'middle',
+    },
   });
 
   mn('cfx.pale', {
     selectors: [':before', ':after'],
-    style: {content: '" "', clear: 'both', display: 'table'}
+    style: {content: '" "', clear: 'both', display: 'table'},
   });
   mn('layout', {
     style: {
-      //boxSizing: 'border-box',
-      display: [ '-webkit-box', '-webkit-flex', 'flex' ]
-    }
+      display: ['-webkit-box', '-webkit-flex', 'flex'],
+    },
   });
   mn('layoutRow', {
-    exts: [ 'layout' ],
+    exts: ['layout'],
     style: {
       '-webkit-box-direction': 'normal',
       '-webkit-box-orient': 'horizontal',
@@ -217,8 +216,8 @@ module.exports = (mn) => {
       '-webkit-align-items': 'center',
       'align-items': 'center',
       '-webkit-align-content': 'center',
-      'align-content': 'center'
-    }
+      'align-content': 'center',
+    },
   });
 
   mn('layoutColumn', {
@@ -515,7 +514,7 @@ module.exports = (mn) => {
     return {
       style: {
         filter: 'alpha(opacity=' + opacity + ')' + important,
-        opacity: '' + (opacity * 0.01) + important
+        opacity: '' + toFixed(opacity * 0.01) + important
       }
     };
   });
@@ -525,7 +524,7 @@ module.exports = (mn) => {
     const unit = p.unit;
     return p.camel ? null : {
       style: {
-        lineHeight: num ? (unit === '%' ? (num * 0.01) : (num + (unit || 'px'))) : '1' + p.i
+        lineHeight: num ? (unit === '%' ? toFixed(num * 0.01) : (num + (unit || 'px'))) : '1' + p.i
       }
     };
   });
@@ -536,19 +535,6 @@ module.exports = (mn) => {
 
     forIn({
       tn: [ 'transition', 0 ],
-
-      g: [ 'grid-template', 0 ],
-      gc: [ 'grid-template-columns', 1 ],
-      gr: [ 'grid-template-rows', 1 ],
-      gar: [ 'grid-auto-rows', 0 ],
-
-      gg: [ 'grid-gap', 0 ],
-
-      gRow: [ 'grid-row', 0 ],
-      gCol: [ 'grid-column', 0 ],
-
-      fx: [ 'flex', 0 ],
-
       tp: [ 'transition-property', 1 ],
 
       bgp: [ 'backgroundPosition', 0 ],
@@ -566,7 +552,22 @@ module.exports = (mn) => {
       ovx: [ 'overflow-x', 1],
       ovy: [ 'overflow-y', 1],
 
-      fd: [ 'flex-direction', 0 ],
+      g: [ 'grid-template', 0 ],
+      gc: [ 'grid-template-columns', 1 ],
+      gr: [ 'grid-template-rows', 1 ],
+      gar: [ 'grid-auto-rows', 0 ],
+
+      gg: [ 'grid-gap', 0 ],
+
+      gRow: [ 'grid-row', 0 ],
+      gCol: [ 'grid-column', 0 ],
+
+      fx: [ 'flex', 0 ],
+      fxd: [ 'flex-direction', 0 ],
+      fxb: [ 'flex-basis', 0 ],
+      fxw: [ 'flex-wrap', 0 ],
+
+      or: [ 'order', 0 ],
       fs: [ 'font-style', 0 ],
       jc: [ 'justify-content', 0 ],
       ai: [ 'align-items', 0 ],
@@ -584,27 +585,28 @@ module.exports = (mn) => {
       v: [ 'visibility', 0 ],
       ts: [ 'transform-style', 0 ],
       mbm: [ 'mix-blend-mode', 0 ],
-
-      bsp: [ 'borderSpacing', 0 ]
-
+      bsp: [ 'borderSpacing', 0 ],
+      bxz: [ 'boxSizing', 0 ],
     }, ([ propName, priority ], essenceName) => {
       mn(essenceName, p => {
         const style = {};
         style[propName] = snackLeftTrim(camelToKebabCase(lowerFirst((p.suffix || ''))))
           .replace(regexp, replacer) + p.i;
-        return { style, priority: priority || 0 };
+        return {style, priority: priority || 0};
       });
     });
 
-    const __wr = v => '"' + v + '"';
-    mn('ff', p => {
+    function __wr(v) {
+      return '"' + v + '"';
+    }
+    mn('ff', (p) => {
       return {
         style: {
           fontFamily: snackLeftTrim(p.suffix || '')
             .replace(regexp, replacer)
             .split(/(?:\s*,\s*)+/)
-            .map(__wr).join(',') + p.i
-        }
+            .map(__wr).join(',') + p.i,
+        },
       };
     });
 
@@ -636,7 +638,7 @@ module.exports = (mn) => {
       return p.camel || p.negative ? null : {
         exts: [ 'hmin1-i' ],
         style: {
-          [propName]: '' + (100 * (p.num || 12) / (p.total || 12)) + '%' + p.i
+          [propName]: '' + toFixed(100 * (p.num || 12) / (p.total || 12)) + '%' + p.i
         }
       };
     }, '^([0-9]+(/([0-9]+):total)?)?(.*)$');

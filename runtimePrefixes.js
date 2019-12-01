@@ -5,10 +5,10 @@
 
 module.exports = (mn) => {
   const {utils, propertiesStringify} = mn;
-  const {flags} = utils;
+  const {flags, forEach} = utils;
   const style = document.createElement('div').style;
   const prefixes = propertiesStringify.prefixes;
-  ['webkit', 'moz', 'o',  'ms', 'khtml'].forEach((prefix) => {
+  forEach(['webkit', 'moz', 'o',  'ms', 'khtml'], (prefix) => {
   	if (style[prefix + 'Transform'] !== undefined) prefixes['-' + prefix + '-'] = true;
   });
   flags([

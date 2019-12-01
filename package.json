@@ -1,13 +1,21 @@
 {
   "name": "mn-presets",
-  "version": "0.0.13",
+  "version": "0.0.18",
   "description": "presets for minimalist-notation",
   "keywords": [
-    "styles",
-    "css",
     "presets",
-    "minimalist-notation",
-    "mn"
+    "minimalist notation presets",
+    "MN presets",
+    "MN",
+    "CSS",
+    "preprocessor",
+    "minimalist",
+    "notation",
+    "minimalist notation",
+    "atomic",
+    "functional",
+    "Atomic CSS",
+    "Functional CSS"
   ],
   "author": {
     "name": "Amir Absolutely",
@@ -19,6 +27,9 @@
     "url": "https://github.com/mr-amirka/mn-presets.git"
   },
   "license": "MIT",
+  "scripts": {
+    "lint": "eslint **/*.js*"
+  },
   "devDependencies": {},
   "dependencies": {}
 }
