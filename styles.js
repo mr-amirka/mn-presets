@@ -15,6 +15,9 @@ function snackLeftTrim(v) {
 function toFixed(v) {
   return v.toFixed(2);
 }
+function styleWrap(style, priority) {
+  return {style, priority: priority || 0};
+}
 
 module.exports = (mn) => {
   const {utils, setKeyframes} = mn;
@@ -84,10 +87,14 @@ module.exports = (mn) => {
       const propSuffix = args[1] || '';
       const sidesSet = sidesSetter((side) => propName + side + propSuffix);
       mn(pfx + suffix, (p) => {
-        return p.camel ? 0 : {
-          style: sidesSet((p.value || '0') + (p.unit || 'px') + p.i),
-          priority,
-        };
+        const camel = p.camel;
+        return styleWrap(
+            sidesSet((camel
+              ? lowerFirst(camel)
+              : ((p.value || '0') + (p.unit || 'px'))
+            ) + p.i),
+            priority,
+        );
       });
     });
 
@@ -102,10 +109,10 @@ module.exports = (mn) => {
         });
 
       mn('s' + suffix, (p) => {
-        return p.camel ? 0 : {
-          style: sidesSet((p.value || '0') + (p.unit || 'px') + p.i),
-          priority,
-        };
+        return p.camel ? 0 : styleWrap(
+            sidesSet((p.value || '0') + (p.unit || 'px') + p.i),
+            priority,
+        );
       });
     })();
 
@@ -113,10 +120,10 @@ module.exports = (mn) => {
       const sidesSet = sidesSetter((side) => 'border' + side + '-style');
       mn('bs' + suffix, (p) => {
         const suffix = p.suffix;
-        return suffix && {
-          style: sidesSet(camelToKebabCase(lowerFirst(suffix)) + p.i),
-          priority,
-        };
+        return suffix && styleWrap(
+            sidesSet(camelToKebabCase(lowerFirst(suffix)) + p.i),
+            priority,
+        );
       });
     })();
 
@@ -125,15 +132,14 @@ module.exports = (mn) => {
       mn('bc' + suffix, (p) => {
         const alts = getColor(p.camel || p.color || '0');
         const important = p.i;
-        return {
-          style: sidesSet(important ? joinArrays([], alts, [important]) : alts),
-          priority,
-        };
+        return styleWrap(
+            sidesSet(important ? joinArrays([], alts, [important]) : alts),
+            priority,
+        );
       }, '([A-F0-9]+):color');
     })();
   });
 
-  const matchWidthCalc = '(([-+]):sign([0-9]+):add)$';
   forIn({
     sq: ['width', 'height'],
     w: ['width'],
@@ -160,17 +166,12 @@ module.exports = (mn) => {
         if (sign) sz = 'calc(' + sz + ' ' + sign + ' ' + p.add + 'px)';
         sz += p.i;
         for (propName in propMap) style[propName] = sz; // eslint-disable-line
-        return {
-          style,
-          priority,
-        };
-      }, matchWidthCalc);
+        return styleWrap(style, priority);
+      }, '(([-+]):sign([0-9]+):add)$');
     });
   });
 
-  mn('tbl', {
-    style: {display: 'table'},
-  });
+  mn('tbl', styleWrap({display: 'table'}));
   mn('tbl.cell', {
     selectors: ['>*'],
     style: {
@@ -183,11 +184,9 @@ module.exports = (mn) => {
     selectors: [':before', ':after'],
     style: {content: '" "', clear: 'both', display: 'table'},
   });
-  mn('layout', {
-    style: {
-      display: ['-webkit-box', '-webkit-flex', 'flex'],
-    },
-  });
+  mn('layout', styleWrap({
+    display: ['-webkit-box', '-webkit-flex', 'flex'],
+  }));
   mn('layoutRow', {
     exts: ['layout'],
     style: {
@@ -232,7 +231,8 @@ module.exports = (mn) => {
       '-webkit-justify-content': 'space-between',
       'justify-content': 'space-between'},
   }, (style, essenceName) => mn(
-      'fha' + upperFirst(essenceName), {style, priority: 1},
+      'fha' + upperFirst(essenceName),
+      styleWrap(style, 1),
   ));
 
   // flex vertical align
@@ -266,7 +266,7 @@ module.exports = (mn) => {
       'align-content': 'stretch',
     },
   }, (style, essenceName) => mn(
-      'fva' + upperFirst(essenceName), {style, priority: 1},
+      'fva' + upperFirst(essenceName), styleWrap(style),
   ));
 
   forIn({
@@ -275,28 +275,28 @@ module.exports = (mn) => {
   }, (propName, essenceName) => {
     mn(essenceName, (p) => {
       const num = p.num;
-      return p.camel || p.negative ? 0 : (num ? {
-        style: {[propName]: num + 'ms' + p.i},
-      } : {
-        exts: [essenceName + '250' + p.ni],
-      });
+      return p.camel || p.negative ? 0 : (num
+        ? styleWrap({[propName]: num + 'ms' + p.i})
+        : {exts: [essenceName + '250' + p.ni]}
+      );
     });
   });
 
-  const colorMatch
-    = '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$';
   forIn({
-    c: 'color',
-    stroke: 'stroke',
-    fill: 'fill',
-  }, (propName, pfx) => {
+    c: ['color'],
+    stroke: ['stroke'],
+    fill: ['fill'],
+    olc: ['outlineColor', 1],
+  }, (options, pfx) => {
+    const propName = options[0];
+    const priority = options[1] || 0;
     mn(pfx, (p) => {
       const alts = getColor(p.value || '0');
       const important = p.i;
       const style = {};
       style[propName] = important ? joinArrays([], alts, [important]) : alts;
-      return {style};
-    }, colorMatch);
+      return styleWrap(style, priority);
+    }, '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$');
   });
 
   // background: (...)
@@ -305,21 +305,17 @@ module.exports = (mn) => {
     if (p.negative || !v) return;
     const alts = colorGetBackground(v);
     const important = p.i;
-    return {
-      style: {
-        background: important ? joinArrays([], alts, [important]) : alts,
-      },
-    };
+    return styleWrap({
+      background: important ? joinArrays([], alts, [important]) : alts,
+    });
   });
 
   // background: url(...)
   mn('bgu', (p) => {
     const url = snackLeftTrim(p.suffix);
-    return url ? {
-      style: {
-        background: 'url("' + url + '")' + p.i,
-      },
-    } : 0;
+    return url ? styleWrap({
+      background: 'url("' + url + '")' + p.i,
+    }) : 0;
   });
 
   forIn({
@@ -337,26 +333,20 @@ module.exports = (mn) => {
   }, (valsMap, propName) => {
     forIn(valsMap, (value, pfx) => {
       mn(pfx, (p) => {
-        if (p.suffix) return;
-        return {
-          style: {
-            [propName]: value + p.i,
-          },
-        };
+        return p.suffix ? 0 : styleWrap({
+          [propName]: value + p.i,
+        });
       });
     });
   });
 
   mn('fw', (p) => {
-    if (p.negative) return;
     const camel = p.camel;
-    return {
-      style: {
-        fontWeight: (camel
-          ? camelToKebabCase(lowerFirst(camel))
-          : (100 * intval(p.num, 1, 1, 9))) + p.i,
-      },
-    };
+    return p.negative ? 0 : styleWrap({
+      fontWeight: (camel
+        ? camelToKebabCase(lowerFirst(camel))
+        : (100 * intval(p.num, 1, 1, 9))) + p.i,
+    }, 1);
   });
 
   forIn({
@@ -365,64 +355,54 @@ module.exports = (mn) => {
     abs: 'absolute', // eslint-disable-line
     'static': 'static',
   }, (position, essenceName) => {
-    mn(essenceName, (p) => ({style: {position: position + p.i}, priority: 1}));
+    mn(essenceName, (p) => styleWrap({position: position + p.i}, 1));
   });
 
   mn('x', (p) => {
     const scale = p.s;
     const angle = p.angle;
     const z = p.z;
-    return {
-      style: {
-        transform:
-          (angle ? ('rotate' + p.dir.toUpperCase()
-          + '(' + angle + (p.unit || 'deg') + ') ') : '')
-          + 'translate(' + ((p.x || '0') + (p.xu || 'px')) + ','
-          + ((p.y || '0') + (p.yu || 'px')) + ')'
-          + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
-          + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
-          + p.i,
-      },
-    }; // eslint-disable-next-line
+    return styleWrap({
+      transform:
+        (angle ? ('rotate' + p.dir.toUpperCase()
+        + '(' + angle + (p.unit || 'deg') + ') ') : '')
+        + 'translate(' + ((p.x || '0') + (p.xu || 'px')) + ','
+        + ((p.y || '0') + (p.yu || 'px')) + ')'
+        + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
+        + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
+        + p.i,
+    }); // eslint-disable-next-line
   }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
 
   (() => {
-    let uninited = true;
+    let inited;
     mn('spnr', (p) => {
       let v = p.value;
       if (isNaN(v = v ? parseInt(v) : 3000) || v < 1) return 0;
 
-      if (uninited) {
-        uninited = false;
-        setKeyframes('spinner-animate', {
-          from: {transform: 'rotateZ(0deg)'},
-          to: {transform: 'rotateZ(360deg)'},
-        });
-        mn.keyframesCompile();
-      }
+      inited || (inited = true, setKeyframes('spinner-animate', {
+        from: {transform: 'rotateZ(0deg)'},
+        to: {transform: 'rotateZ(360deg)'},
+      }), mn.keyframesCompile());
 
-      return {
-        style: {animation: 'spinner-animate ' + v + 'ms infinite linear' + p.i},
-      };
+      return styleWrap({
+        animation: 'spinner-animate ' + v + 'ms infinite linear' + p.i,
+      });
     });
   })();
 
   ['x', 'y', 'z'].forEach((suffix) => {
     const prefix = 'rotate' + suffix.toUpperCase() + '(';
-    mn('r' + suffix, (p) => ({
-      style: {
-        transform: prefix + (p.value || '180') + (p.unit || 'deg') + ')' + p.i,
-      },
+    mn('r' + suffix, (p) => styleWrap({
+      transform: prefix + (p.value || '180') + (p.unit || 'deg') + ')' + p.i,
     }));
   });
 
 
-  mn('break', {
-    style: {
-      whiteSpace: 'normal',
-      wordBreak: 'break-word',
-    },
-  });
+  mn('break', styleWrap({
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+  }));
 
   (() => {
     const matchs = [
@@ -470,51 +450,80 @@ module.exports = (mn) => {
 
         const style = {};
         style[propName] = output;
-        return {style};
+        return styleWrap(style);
       }, matchs);
     });
   })();
 
+  // border-radius by sides
+  forIn({
+    lt: 'top-left',
+    lb: 'bottom-left',
+    rt: 'top-right',
+    rb: 'bottom-right',
+  }, (side, suffix) => {
+    const propName = 'border-' + side + '-radius';
+    mn('r' + suffix, (p) => {
+      if (p.camel || p.negative) return 0;
+      const style = {};
+      style[propName] = (p.num || 10000) + (p.unit || 'px') + p.i;
+      return styleWrap(style);
+    });
+  });
 
   forIn({
-    f: ['font-size', 14],
+    f: ['font-size', 14, 1],
     r: ['borderRadius', 10000],
     sw: ['strokeWidth', 0],
+    olw: ['outlineWidth', 0, 1],
   }, (options, pfx) => {
     const [propName, defaultValue] = options;
+    const priority = options[2] || 0;
     mn(pfx, (p) => {
       if (p.camel || p.negative) return 0;
       const style = {};
       style[propName] = (p.num || defaultValue) + (p.unit || 'px') + p.i;
-      return {style};
+      return styleWrap(style, priority);
     });
   });
 
   mn('z', (p) => {
-    return p.camel ? 0 : {
-      style: {
-        zIndex: (p.num || '1') + p.i,
-      },
-    };
+    return p.camel ? 0 : styleWrap({
+      zIndex: (p.num || '1') + p.i,
+    });
   });
 
   mn('o', (p) => {
-    return p.camel || p.negative ? 0 : {
-      style: {
-        opacity: '' + toFixed((p.num || 0) * 0.01) + p.i,
-      },
-    };
+    return p.camel || p.negative ? 0 : styleWrap({
+      opacity: '' + toFixed((p.num || 0) * 0.01) + p.i,
+    });
   });
 
   mn('lh', (p) => {
     const num = p.num;
     const unit = p.unit;
-    return p.camel ? 0 : {
-      style: {
-        lineHeight: num ? (unit === '%'
-          ? toFixed(num * 0.01) : (num + (unit || 'px'))) : '1' + p.i,
-      },
-    };
+    return p.camel ? 0 : styleWrap({
+      lineHeight: (num ? (unit === '%'
+        ? toFixed(num * 0.01) : (num + (unit || 'px'))) : '1') + p.i,
+    });
+  });
+
+  mn('tsa', (p) => {
+    const camel = p.camel;
+    return p.negative ? 0 : styleWrap({
+      textSizeAdjust: (camel
+        ? lowerFirst(camel)
+        : ((p.num || '100') + (p.unit || '%'))) + p.i,
+    });
+  });
+  mn('olo', (p) => {
+    const camel = p.camel;
+    return styleWrap({
+      outlineOffset: (camel
+        ? lowerFirst(camel)
+        : (p.value || '0') + (p.unit || 'px')
+      ) + p.i,
+    });
   });
 
   (() => {
@@ -524,8 +533,10 @@ module.exports = (mn) => {
     const regexp = /(\\_)|(_)/g;
 
     forIn({
+      apc: ['-webkit-appearance', 0],
+
       tn: ['transition', 0],
-      tp: ['transition-property', 1],
+      tp: ['transitionProperty', 1],
 
       bgp: ['backgroundPosition', 0],
       bgpx: ['backgroundPositionX', 1],
@@ -538,55 +549,58 @@ module.exports = (mn) => {
       bgrx: ['backgroundRepeatX', 1],
       bgry: ['backgroundRepeatY', 1],
 
+      ol: ['outline', 0],
+      ols: ['outlineStyle', 1],
       ov: ['overflow', 0],
-      ovx: ['overflow-x', 1],
-      ovy: ['overflow-y', 1],
+      ovx: ['overflowX', 1],
+      ovy: ['overflowY', 1],
 
-      g: ['grid-template', 0],
-      gc: ['grid-template-columns', 1],
-      gr: ['grid-template-rows', 1],
-      gar: ['grid-auto-rows', 0],
+      gt: ['gridTemplate', 0],
+      gtc: ['gridTemplateColumns', 1],
+      gtr: ['gridTemplateRows', 1],
+      gar: ['gridAutoRows', 0],
 
-      gg: ['grid-gap', 0],
+      gg: ['gridGap', 0],
 
-      gRow: ['grid-row', 0],
-      gCol: ['grid-column', 0],
+      gr: ['gridRow', 0],
+      gc: ['gridColumn', 0],
 
       fx: ['flex', 0],
-      fxd: ['flex-direction', 0],
-      fxb: ['flex-basis', 0],
-      fxw: ['flex-wrap', 0],
+      fxd: ['flexDirection', 0],
+      fxb: ['flexBasis', 0],
+      fxw: ['flexWrap', 0],
 
       or: ['order', 0],
-      fs: ['font-style', 0],
-      jc: ['justify-content', 0],
-      ai: ['align-items', 0],
-      tt: ['text-transform', 0],
-      ttf: ['transition-timing-function', 0],
-      td: ['text-decoration', 0],
-      to: ['text-overflow', 0],
+      fs: ['font-style', 1],
+      jc: ['justifyContent', 0],
+      ai: ['alignItems', 0],
+      tt: ['textTransform', 0],
+      ttf: ['transitionTimingFunction', 0],
+      td: ['textDecoration', 0],
+      to: ['textOverflow', 0],
       cr: ['cursor', 0],
-      ol: ['outline', 0],
-      ws: ['white-space', 0],
-      va: ['vertical-align', 0],
+
+      ws: ['whiteSpace', 0],
+      va: ['verticalAlign', 0],
       d: ['display', 0],
-      e: ['pointer-events', 0],
+      e: ['pointerEvents', 0],
       us: ['user-select', 0],
       v: ['visibility', 0],
-      ts: ['transform-style', 0],
-      mbm: ['mix-blend-mode', 0],
+      ts: ['transformStyle', 0],
+      mbm: ['mixBlendMode', 0],
       bsp: ['borderSpacing', 0],
       bxz: ['boxSizing', 0],
+      font: ['font', 0],
     }, ([propName, priority], essenceName) => {
       mn(essenceName, (p) => {
+        const suffix = lowerFirst(p.suffix || '');
         const style = {};
-        style[propName]
-          = replace(
-              snackLeftTrim(camelToKebabCase(lowerFirst((p.suffix || '')))),
-              regexp,
-              replacer,
-          ) + p.i;
-        return {style, priority: priority || 0};
+        style[propName] = replace(
+            suffix[0] == '_' ? snackLeftTrim(suffix) : camelToKebabCase(suffix),
+            regexp,
+            replacer,
+        ) + p.i;
+        return styleWrap(style, priority || 0);
       });
     });
 
@@ -594,31 +608,25 @@ module.exports = (mn) => {
       return '"' + v + '"';
     }
     mn('ff', (p) => {
-      return {
-        style: {
-          fontFamily: replace(snackLeftTrim(p.suffix || ''), regexp, replacer)
-              .split(/(?:\s*,\s*)+/)
-              .map(__wr).join(',') + p.i,
-        },
-      };
+      return styleWrap({
+        fontFamily: replace(snackLeftTrim(p.suffix || ''), regexp, replacer)
+            .split(/(?:\s*,\s*)+/)
+            .map(__wr).join(',') + p.i,
+      }, 1);
     });
     mn('ctt', (p) => {
       const s = p.suffix;
-      return {
-        style: {
-          content: (s ? ('"'
-            + replace((snackLeftTrim(s) || ' '), regexp, replacer)
-            + '"') : 'none') + p.i,
-        },
-      };
+      return styleWrap({
+        content: (s ? ('"'
+          + replace((snackLeftTrim(s) || ' '), regexp, replacer)
+          + '"') : 'none') + p.i,
+      });
     });
     mn('rs', (p) => {
       const s = p.suffix;
-      return s ? {
-        style: {
-          borderRadius: replace(snackLeftTrim(s), regexp, replacer) + p.i,
-        },
-      } : 0;
+      return s ? styleWrap({
+        borderRadius: replace(snackLeftTrim(s), regexp, replacer) + p.i,
+      }) : 0;
     });
   })();
 
@@ -641,19 +649,17 @@ module.exports = (mn) => {
   ((essences) => {
     const regexpName = /^([A-Za-z]+)([0-9]*)(.*)$/;
     const regexpSep = /_+/;
-    mn('ft', (p) => ({
-      style: {
-        filter: lowerFirst(p.suffix).split(regexpSep).map((v) => {
-          if (!v) return '';
-          const matchs = regexpName.exec(v);
-          const funcName = matchs[1];
-          if (!funcName) return '';
-          const options = essences[funcName];
-          return camelToKebabCase(options && options[0] || funcName)
-            + '(' + (matchs[2] || options && options[1] || '')
-            + (matchs[3] || options && options[2] || '') + ') ';
-        }).join('') + p.i,
-      },
+    mn('ft', (p) => styleWrap({
+      filter: lowerFirst(p.suffix).split(regexpSep).map((v) => {
+        if (!v) return '';
+        const matchs = regexpName.exec(v);
+        const funcName = matchs[1];
+        if (!funcName) return '';
+        const options = essences[funcName];
+        return camelToKebabCase(options && options[0] || funcName)
+          + '(' + (matchs[2] || options && options[1] || '')
+          + (matchs[3] || options && options[2] || '') + ') ';
+      }).join('') + p.i,
     }));
   })({
     blur: ['blur', 4, 'px'],

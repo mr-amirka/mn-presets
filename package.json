@@ -1,8 +1,10 @@
 {
   "name": "mn-presets",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "presets for minimalist-notation",
   "keywords": [
+    "style",
+    "media query",
     "presets",
     "minimalist notation presets",
     "MN presets",
@@ -15,7 +17,8 @@
     "atomic",
     "functional",
     "Atomic CSS",
-    "Functional CSS"
+    "Functional CSS",
+    "normalize"
   ],
   "author": {
     "name": "Amir Absolutely",

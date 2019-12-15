@@ -3,7 +3,7 @@
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
-module.exports = mn => {
+module.exports = (mn) => {
   const {media, utils} = mn;
   const {forEach} = utils;
   /*
@@ -21,35 +21,36 @@ module.exports = mn => {
     [ 'lg', '(min-width: 1200px)' ],
     [ 'lg-ll', '(min-width: 1200px) and (max-width: 1559px)' ],
     [ 'll', '(min-width: 1600px)' ],
-    [ 'pt', 'print' ]
   ], (v, i) => media[v[0]] = {query: v[1], priority: i});
 */
 
   forEach([
-    //mobile
-    ["m", "(max-width: 992px)"],
-    ["m2", "(max-width: 768px)"],
-    ["m3", "(max-width: 640px)"],
-    ["m4", "(max-width: 480px)"],
-    ["m5", "(max-width: 360px)"],
-    ["m6", "(max-width: 320px)"],
+    // mobile
+    ['m', '(max-width: 992px)'],
+    ['m2', '(max-width: 768px)'],
+    ['m3', '(max-width: 640px)'],
+    ['m4', '(max-width: 480px)'],
+    ['m5', '(max-width: 360px)'],
+    ['m6', '(max-width: 320px)'],
 
-    ["m2-", "(min-width: 768px) and (max-width: 992px)"],
-    ["m3-", "(min-width: 640px) and (max-width: 992px)"],
-    ["m4-", "(min-width: 480px) and (max-width: 992px)"],
-    ["m5-", "(min-width: 360px) and (max-width: 992px)"],
-    ["m6-", "(min-width: 320px) and (max-width: 992px)"],
+    ['m2-', '(min-width: 768px) and (max-width: 992px)'],
+    ['m3-', '(min-width: 640px) and (max-width: 992px)'],
+    ['m4-', '(min-width: 480px) and (max-width: 992px)'],
+    ['m5-', '(min-width: 360px) and (max-width: 992px)'],
+    ['m6-', '(min-width: 320px) and (max-width: 992px)'],
 
-    //desktop
-    ["d", "(min-width: 992px)"],
-    ["d2", "(min-width: 1200px)"],
-    ["d3", "(min-width: 1600px)"],
-    ["d4", "(min-width: 1920px)"],
+    // desktop
+    ['d', '(min-width: 992px)'],
+    ['d2', '(min-width: 1200px)'],
+    ['d3', '(min-width: 1600px)'],
+    ['d4', '(min-width: 1920px)'],
 
-    ["-d4", "(min-width: 992px) and (max-width: 1920px)"],
-    ["-d3", "(min-width: 992px) and (max-width: 1600px)"],
-    ["-d2", "(min-width: 992px) and (max-width: 1200px)"],
+    ['-d4', '(min-width: 992px) and (max-width: 1920px)'],
+    ['-d3', '(min-width: 992px) and (max-width: 1600px)'],
+    ['-d2', '(min-width: 992px) and (max-width: 1200px)'],
 
-    ["pt", "print"]
+    // if has mouse, touch pad, advanced stylus digitizers
+    ['mouse', '(pointer: fine) and (hover: hover)'],
+
   ], (v, i) => (media[v[0]] = {query: v[1], priority: i}));
 };

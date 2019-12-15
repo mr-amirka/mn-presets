@@ -1,13 +1,14 @@
 /**
- * @overview MinimalistNotation preset "default settings"
+ * @overview MinimalistNotation preset "prefixes"
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
 module.exports = (mn) => {
   const {utils, propertiesStringify} = mn;
   const {flags} = utils;
-
-  flags(['-webkit-', '-moz-', '-o-',  '-ms-', '-khtml-'], propertiesStringify.prefixes);
+  flags([
+    '-webkit-', '-moz-', '-o-', '-ms-', '-khtml-',
+  ], propertiesStringify.prefixes);
   flags([
     'transform',
     'transformStyle',
@@ -17,5 +18,6 @@ module.exports = (mn) => {
     'filter',
     'opacity',
     'boxSizing',
+    'textSizeAdjust',
   ], propertiesStringify.prefixedAttrs);
 };
