@@ -605,11 +605,15 @@ module.exports = (mn) => {
     });
 
     function __wr(v) {
-      return '"' + v + '"';
+      return v[0] == '-' ? '"' + v.substr(1) + '"' : v;
     }
     mn('ff', (p) => {
-      return styleWrap({
-        fontFamily: replace(snackLeftTrim(p.suffix || ''), regexp, replacer)
+      const suffix = p.suffix;
+      return suffix && styleWrap({
+        fontFamily: replace(
+          suffix[0] == '_' ? snackLeftTrim(suffix) : lowerFirst(suffix),
+          regexp, replacer,
+        )
             .split(/(?:\s*,\s*)+/)
             .map(__wr).join(',') + p.i,
       }, 1);
