@@ -1,11 +1,10 @@
-
 # Minimalist Notation Default Presets
 
 
-**The MN library includes predefined settings included in the default cli-version.**
+**The MN library includes this default presets if other is not seated.**
 
 
-* [Prefixes](#prefixes)   
+* [Auto prefixes](#auto-prefixes)   
 * [Media queries](#media-queries)   
 * [Other default settings](#other-default-settings)  
 * [States](#states)  
@@ -16,42 +15,10 @@
 
 
 
-Try this tests:
-* https://jsfiddle.net/dzgj2sL3/
-* https://jsfiddle.net/j6d8aozy/46/  
-
-Home page: http://minimalist-notation.org  
-
-
-I would be grateful for your feedback and comments. Write me in a [telegram](https://t.me/mr_amirka).  
-With love, your mr.Amirka :)
-
-
-Are you interested in the development of this project? Do your [bit](https://yasobe.ru/na/notation).  
-
-
-
-#### Prefixes
+#### Auto prefixes
 
 [mn-presets/prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/prefixes.js)  
 [mn-presets/runtime-prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/runtime-prefixes.js)  
-
-
-```js
-module.exports = (mn) => {
-  const { flags } = mn.utils;
-  flags(['-webkit-', '-moz-', '-o-',  '-ms-', '-khtml-' ], mn.propertiesStringify.prefixes);
-  flags([
-    'transform',
-    'transitionDuration',
-    'pointerEvents',
-    'userSelect',
-    'filter',
-    'boxSizing'
-  ], mn.propertiesStringify.prefixedAttrs);
-};
-
-```
 
 
 
@@ -62,34 +29,36 @@ module.exports = (mn) => {
 
 ```js
 module.exports = (mn) => {
-  const media = mn.media;
-  [
-    //mobile
-    [ 'm', '(max-width: 991px)' ],
-    [ 'm2', '(max-width: 767px)' ],
-    [ 'm3', '(max-width: 639px)' ],
-    [ 'm4', '(max-width: 479px)' ],
-    [ 'm5', '(max-width: 359px)' ],
-    [ 'm6', '(max-width: 319px)' ],
+  const {media} = mn;
+  mn.utils.forEach([
+    // mobile
+    ['m', '(max-width: 992px)'],
+    ['m2', '(max-width: 768px)'],
+    ['m3', '(max-width: 640px)'],
+    ['m4', '(max-width: 480px)'],
+    ['m5', '(max-width: 360px)'],
+    ['m6', '(max-width: 320px)'],
 
-    [ 'm2-', '(min-width: 768px) and (max-width: 991px)' ],
-    [ 'm3-', '(min-width: 640px) and (max-width: 991px)' ],
-    [ 'm4-', '(min-width: 480px) and (max-width: 991px)' ],
-    [ 'm5-', '(min-width: 360px) and (max-width: 991px)' ],
-    [ 'm6-', '(min-width: 320px) and (max-width: 991px)' ],
+    ['m2-', '(min-width: 768px) and (max-width: 992px)'],
+    ['m3-', '(min-width: 640px) and (max-width: 992px)'],
+    ['m4-', '(min-width: 480px) and (max-width: 992px)'],
+    ['m5-', '(min-width: 360px) and (max-width: 992px)'],
+    ['m6-', '(min-width: 320px) and (max-width: 992px)'],
 
-    //desktop
-    [ 'd', '(min-width: 992px)' ],
-    [ 'd2', '(min-width: 1200px)' ],
-    [ 'd3', '(min-width: 1600px)' ],
-    [ 'd4', '(min-width: 1920px)' ],
+    // desktop
+    ['d', '(min-width: 992px)'],
+    ['d2', '(min-width: 1200px)'],
+    ['d3', '(min-width: 1600px)'],
+    ['d4', '(min-width: 1920px)'],
 
-    [ '-d4', '(min-width: 992px) and (max-width: 1919px)' ],
-    [ '-d3', '(min-width: 992px) and (max-width: 1599px)' ],
-    [ '-d2', '(min-width: 992px) and (max-width: 1199px)' ],
+    ['-d4', '(min-width: 992px) and (max-width: 1920px)'],
+    ['-d3', '(min-width: 992px) and (max-width: 1600px)'],
+    ['-d2', '(min-width: 992px) and (max-width: 1200px)'],
 
-    [ 'pt', 'print' ]
-  ].forEach((v, i) => media[v[0]] = {query: v[1], priority: i});
+    // if has mouse, touch pad, advanced stylus digitizers
+    ['mouse', '(pointer: fine) and (hover: hover)'],
+
+  ], (v, i) => (media[v[0]] = {query: v[1], priority: i}));
 };
 ```
 
@@ -152,26 +121,25 @@ Output:
 #### Other default settings
 
 
-[mn-presets/theme.js](https://github.com/mr-amirka/mn-presets/blob/master/theme.js)
+[mn-presets/main.js](https://github.com/mr-amirka/mn-presets/blob/master/main.js)
 
 
 ```js
-module.exports = (mn) => {
-
+module.exports = (mn) => {;
   mn.css({
-    '*, *:before, *:after': {
-      boxSizing: 'border-box'
-    },
     html: {
-      '-ms-text-size-adjust': '100%',
-      '-webkit-text-size-adjust': '100%',
-      '-webkit-tap-highlight-color': '#000'
-    }
+      '-webkit-tap-highlight-color': '#000',
+    },
   });
-
   mn.assign({
-    body: 'm0',
-    'main, section, header, footer, nav, iframe, video': 'dBlock'
+    '*, *:before, *:after': 'bxzBorderBox',
+    html: 'ovxHidden tsa',
+    body: 'm0 ovxHidden',
+    a: 'crPointer@mouse',
+    img: 'wmax dBlock mhAuto b0',
+    iframe: 'dBlock b0',
+    'aside, article, main, section, header, footer, nav, video, canvas, input, textarea':
+      'dBlock',
   });
 };
 ```

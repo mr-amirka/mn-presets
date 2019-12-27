@@ -3,8 +3,11 @@
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
+/* eslint quote-props: ["error", "as-needed"] */
+
 const reTrimSnackLeft = /^_+/g;
 const reTrimKebabLeft = /^-+/g;
+const reZero =/^0+|\.?0+$/g;
 
 function replace(v, from, to) {
   return v.replace(from, to);
@@ -12,11 +15,15 @@ function replace(v, from, to) {
 function snackLeftTrim(v) {
   return replace(v, reTrimSnackLeft, '');
 }
-function toFixed(v) {
-  return v.toFixed(2);
-}
 function styleWrap(style, priority) {
   return {style, priority: priority || 0};
+}
+function toFixed(v) {
+  return replace(v.toFixed(2), reZero, '') || '0';
+}
+function sidesIteratee(dst, sideName) {
+  dst[sideName ? ('-' + sideName) : sideName] = 1;
+  return dst;
 }
 
 module.exports = (mn) => {
@@ -35,29 +42,25 @@ module.exports = (mn) => {
     colorGetBackground,
   } = utils;
 
-  function sidesIteratee(dst, sideName) {
-    dst[sideName ? ('-' + sideName) : sideName] = 1;
-    return dst;
-  }
   const defaultSides = reduce({
     '': [''],
-    't': ['top'],
-    'b': ['bottom'],
-    'l': ['left'],
-    'r': ['right'],
+    t: ['top'],
+    b: ['bottom'],
+    l: ['left'],
+    r: ['right'],
 
-    'v': ['top', 'bottom'],
-    'vl': ['top', 'bottom', 'left'],
-    'vr': ['top', 'bottom', 'right'],
+    v: ['top', 'bottom'],
+    vl: ['top', 'bottom', 'left'],
+    vr: ['top', 'bottom', 'right'],
 
-    'h': ['left', 'right'],
-    'ht': ['left', 'right', 'top'],
-    'hb': ['left', 'right', 'bottom'],
+    h: ['left', 'right'],
+    ht: ['left', 'right', 'top'],
+    hb: ['left', 'right', 'bottom'],
 
-    'lt': ['top', 'left'],
-    'rt': ['top', 'right'],
-    'lb': ['bottom', 'left'],
-    'rb': ['bottom', 'right'],
+    lt: ['top', 'left'],
+    rt: ['top', 'right'],
+    lb: ['bottom', 'left'],
+    rb: ['bottom', 'right'],
   }, (dst, sides, sideKey) => {
     dst[sideKey] = reduce(sides, sidesIteratee, {});
     return dst;
@@ -350,12 +353,15 @@ module.exports = (mn) => {
   });
 
   forIn({
-    rlv: 'relative', // eslint-disable-line
-    fixed: 'fixed', // eslint-disable-line
-    abs: 'absolute', // eslint-disable-line
-    'static': 'static',
-  }, (position, essenceName) => {
-    mn(essenceName, (p) => styleWrap({position: position + p.i}, 1));
+    rlv: ['relative', 1], // eslint-disable-line
+    abs: ['absolute', 2], // eslint-disable-line
+    fixed: ['fixed', 3], // eslint-disable-line
+    'static': ['static', 4],
+  }, (options, essenceName) => {
+    mn(essenceName, (p) => styleWrap(
+        {position: options[0] + p.i},
+        options[1] || 0),
+    );
   });
 
   mn('x', (p) => {
@@ -364,12 +370,12 @@ module.exports = (mn) => {
     const z = p.z;
     return styleWrap({
       transform:
-        (angle ? ('rotate' + p.dir.toUpperCase()
-        + '(' + angle + (p.unit || 'deg') + ') ') : '')
-        + 'translate(' + ((p.x || '0') + (p.xu || 'px')) + ','
+        'translate(' + ((p.x || '0') + (p.xu || 'px')) + ','
         + ((p.y || '0') + (p.yu || 'px')) + ')'
         + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
         + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
+        + (angle ? (' rotate' + p.dir.toUpperCase()
+        + '(' + angle + (p.unit || 'deg') + ')') : '')
         + p.i,
     }); // eslint-disable-next-line
   }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');

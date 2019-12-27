@@ -4,10 +4,9 @@
  */
 
 module.exports = (mn) => {
-  const {media, utils} = mn;
-  const {forEach} = utils;
+  const {media} = mn;
   /*
-  forEach([
+  mn.utils.forEach([
     [ 'sm', '(max-width: 991px)' ],
     [ 'sm-md', '(min-width: 768px) and (max-width: 991px)' ],
     [ 'xs', '(max-width: 767px)' ],
@@ -24,7 +23,7 @@ module.exports = (mn) => {
   ], (v, i) => media[v[0]] = {query: v[1], priority: i});
 */
 
-  forEach([
+  mn.utils.forEach([
     // mobile
     ['m', '(max-width: 992px)'],
     ['m2', '(max-width: 768px)'],

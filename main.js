@@ -9,13 +9,12 @@
 
 /* eslint quote-props: ["error", "as-needed"] */
 module.exports = (mn) => {
-  const {css, assign} = mn;
-  css({
+  mn.css({
     html: {
       '-webkit-tap-highlight-color': '#000',
     },
   });
-  assign({
+  mn.assign({
     '*, *:before, *:after': 'bxzBorderBox',
     html: 'ovxHidden tsa',
     body: 'm0 ovxHidden',
