@@ -10,6 +10,8 @@ module.exports = (mn) => {
     '-webkit-', '-moz-', '-o-', '-ms-', '-khtml-',
   ], propertiesStringify.prefixes);
   flags([
+    'appearance',
+    'backgroundClip',
     'transform',
     'transformStyle',
     'transitionDuration',

@@ -25,6 +25,16 @@ function sidesIteratee(dst, sideName) {
   dst[sideName ? ('-' + sideName) : sideName] = 1;
   return dst;
 }
+function normalizeValue(p) {
+  const {value} = p;
+  return value == '0' ? value : (value + (p.unit || 'px'));
+}
+function normalizeDefault(p, priority, def) {
+  return {
+    exts: [p.name + (def || '0') + p.ni],
+    priority: priority || 0,
+  };
+}
 
 module.exports = (mn) => {
   const {utils, setKeyframes} = mn;
@@ -91,13 +101,10 @@ module.exports = (mn) => {
       const sidesSet = sidesSetter((side) => propName + side + propSuffix);
       mn(pfx + suffix, (p) => {
         const camel = p.camel;
-        return styleWrap(
-            sidesSet((camel
-              ? lowerFirst(camel)
-              : ((p.value || '0') + (p.unit || 'px'))
-            ) + p.i),
+        return p.value ? styleWrap(
+            sidesSet((camel ? lowerFirst(camel) : normalizeValue(p))),
             priority,
-        );
+        ) : normalizeDefault(p, priority);
       });
     });
 
@@ -112,19 +119,18 @@ module.exports = (mn) => {
         });
 
       mn('s' + suffix, (p) => {
-        return p.camel ? 0 : styleWrap(
-            sidesSet((p.value || '0') + (p.unit || 'px') + p.i),
+        return p.camel ? 0 : (p.value ? styleWrap(
+            sidesSet(normalizeValue(p)),
             priority,
-        );
+        ) : normalizeDefault(p, priority));
       });
     })();
 
     (() => {
       const sidesSet = sidesSetter((side) => 'border' + side + '-style');
       mn('bs' + suffix, (p) => {
-        const suffix = p.suffix;
-        return suffix && styleWrap(
-            sidesSet(camelToKebabCase(lowerFirst(suffix)) + p.i),
+        return styleWrap(
+            sidesSet(camelToKebabCase(lowerFirst(p.suffix || 'solid'))),
             priority,
         );
       });
@@ -133,13 +139,11 @@ module.exports = (mn) => {
     (() => {
       const sidesSet = sidesSetter((side) => 'border' + side + '-color');
       mn('bc' + suffix, (p) => {
-        const alts = getColor(p.camel || p.color || '0');
-        const important = p.i;
-        return styleWrap(
-            sidesSet(important ? joinArrays([], alts, [important]) : alts),
-            priority,
-        );
-      }, '([A-F0-9]+):color');
+        const {value} = p;
+        return value
+          ? styleWrap(sidesSet(getColor(value || '0')), priority)
+          : normalizeDefault(p, priority);
+      }, '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$');
     })();
   });
 
@@ -149,7 +153,7 @@ module.exports = (mn) => {
     h: ['height'],
   }, (props, essencePrefix) => {
     const length = props.length;
-    const priority = 4 - length;
+    const priority = 2 - length;
     forEach(['', 'min', 'max'], (sfx) => {
       const propMap = {};
       let propName, i = 0; // eslint-disable-line
@@ -158,16 +162,15 @@ module.exports = (mn) => {
         propMap[sfx ? (sfx + '-' + propName) : propName] = 1;
       }
       mn(essencePrefix + sfx, (p) => {
-        if (p.negative) return;
-        const sign = p.sign;
-        const num = p.num;
-        const camel = p.camel;
-        const unit = p.unit || 'px';
+        if (!p.value) return normalizeDefault(p, priority, '100%');
+        const {sign, camel} = p;
+        const num = p.negative ? 0 : p.num;
         const style = {};
         let propName;
-        let sz = camel ? camel.toLowerCase() : (num ? (num + unit) : '100%');
+        let sz = camel
+          ? camel.toLowerCase()
+          : (num ? (num == '0' ? num: (num + (p.unit || 'px'))) : '100%');
         if (sign) sz = 'calc(' + sz + ' ' + sign + ' ' + p.add + 'px)';
-        sz += p.i;
         for (propName in propMap) style[propName] = sz; // eslint-disable-line
         return styleWrap(style, priority);
       }, '(([-+]):sign([0-9]+):add)$');
@@ -276,11 +279,10 @@ module.exports = (mn) => {
     dn: 'transitionDuration',
     delay: 'transitionDelay',
   }, (propName, essenceName) => {
-    mn(essenceName, (p) => {
-      const num = p.num;
-      return p.camel || p.negative ? 0 : (num
-        ? styleWrap({[propName]: num + 'ms' + p.i})
-        : {exts: [essenceName + '250' + p.ni]}
+    mn(essenceName, (p, num) => {
+      return p.camel || p.negative ? 0 : ((num = p.num)
+        ? styleWrap({[propName]: num + 'ms'})
+        : normalizeDefault(p, 1, 250)
       );
     });
   });
@@ -290,35 +292,31 @@ module.exports = (mn) => {
     stroke: ['stroke'],
     fill: ['fill'],
     olc: ['outlineColor', 1],
+    bgc: ['backgroundColor', 1],
   }, (options, pfx) => {
     const propName = options[0];
     const priority = options[1] || 0;
     mn(pfx, (p) => {
-      const alts = getColor(p.value || '0');
-      const important = p.i;
       const style = {};
-      style[propName] = important ? joinArrays([], alts, [important]) : alts;
+      style[propName] = getColor(p.value || '0');
       return styleWrap(style, priority);
     }, '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$');
   });
 
   // background: (...)
-  mn('bg', (p) => {
-    const v = p.suffix;
-    if (p.negative || !v) return;
-    const alts = colorGetBackground(v);
-    const important = p.i;
-    return styleWrap({
-      background: important ? joinArrays([], alts, [important]) : alts,
-    });
+  mn('bg', (p, v) => {
+    return p.negative ? 0 : ((v = p.suffix) ? styleWrap({
+      background: colorGetBackground(v),
+    }) : normalizeDefault(p));
   });
 
   // background: url(...)
-  mn('bgu', (p) => {
-    const url = snackLeftTrim(p.suffix);
-    return url ? styleWrap({
-      background: 'url("' + url + '")' + p.i,
-    }) : 0;
+  mn('bgu', (p, url) => {
+    return styleWrap({
+      background: (url = snackLeftTrim(p.suffix))
+        ? ('url("' + url + '")')
+        : 'none',
+    });
   });
 
   forIn({
@@ -337,7 +335,7 @@ module.exports = (mn) => {
     forIn(valsMap, (value, pfx) => {
       mn(pfx, (p) => {
         return p.suffix ? 0 : styleWrap({
-          [propName]: value + p.i,
+          [propName]: value,
         });
       });
     });
@@ -346,20 +344,20 @@ module.exports = (mn) => {
   mn('fw', (p) => {
     const camel = p.camel;
     return p.negative ? 0 : styleWrap({
-      fontWeight: (camel
+      fontWeight: camel
         ? camelToKebabCase(lowerFirst(camel))
-        : (100 * intval(p.num, 1, 1, 9))) + p.i,
+        : (100 * intval(p.num, 1, 1, 9)),
     }, 1);
   });
 
   forIn({
-    rlv: ['relative', 1], // eslint-disable-line
-    abs: ['absolute', 2], // eslint-disable-line
-    fixed: ['fixed', 3], // eslint-disable-line
-    'static': ['static', 4],
+    rlv: ['relative', 1],
+    abs: ['absolute', 2],
+    fixed: ['fixed', 3],
+    'static': ['static', 4], // eslint-disable-line
   }, (options, essenceName) => {
     mn(essenceName, (p) => styleWrap(
-        {position: options[0] + p.i},
+        {position: options[0]},
         options[1] || 0),
     );
   });
@@ -375,8 +373,7 @@ module.exports = (mn) => {
         + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
         + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
         + (angle ? (' rotate' + p.dir.toUpperCase()
-        + '(' + angle + (p.unit || 'deg') + ')') : '')
-        + p.i,
+        + '(' + angle + (p.unit || 'deg') + ')') : ''),
     }); // eslint-disable-next-line
   }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
 
@@ -386,22 +383,24 @@ module.exports = (mn) => {
       let v = p.value;
       if (isNaN(v = v ? parseInt(v) : 3000) || v < 1) return 0;
 
-      inited || (inited = true, setKeyframes('spinner-animate', {
+      inited || (inited = 1, setKeyframes('spinner-animate', {
         from: {transform: 'rotateZ(0deg)'},
         to: {transform: 'rotateZ(360deg)'},
       }), mn.keyframesCompile());
 
       return styleWrap({
-        animation: 'spinner-animate ' + v + 'ms infinite linear' + p.i,
+        animation: 'spinner-animate ' + v + 'ms infinite linear',
       });
     });
   })();
 
   ['x', 'y', 'z'].forEach((suffix) => {
     const prefix = 'rotate' + suffix.toUpperCase() + '(';
-    mn('r' + suffix, (p) => styleWrap({
-      transform: prefix + (p.value || '180') + (p.unit || 'deg') + ')' + p.i,
-    }));
+    mn('r' + suffix, (p, v) => {
+      return (v = p.value) ? styleWrap({
+        transform: prefix + v + (p.unit || 'deg') + ')',
+      }) : normalizeDefault(p, 0, 180);
+    });
   });
 
 
@@ -420,25 +419,22 @@ module.exports = (mn) => {
       '(in):in',
     ];
     forIn({
-      bsh: {
-        propName: 'boxShadow',
-        handler: (x, y, value, r, color) => [x, y, value, r, color],
-      },
-      tsh: {
-        propName: 'textShadow',
-        handler: (x, y, value, r, color) => [x, y, value, color],
-      },
-    }, (options, pfx) => {
-      const propName = options.propName;
-      const handler = options.handler;
-
+      bxsh: ['boxShadow', function(x, y, value, r, color) {
+        return [x, y, value, r, color];
+      }],
+      tsh: ['textShadow', function(x, y, value, r, color) {
+        return [x, y, value, color];
+      }],
+    }, ([propName, handler], pfx) => {
       mn(pfx, (p) => {
         const repeatCount = intval(p.m, 1, 0);
         const value = p.value;
+        const style = {};
+        if (!value || repeatCount < 1) {
+          style[propName] = 'none';
+          return styleWrap(style);
+        }
 
-        if (!value || repeatCount < 1) return;
-
-        const important = p.i;
         const colors = getColor(p.c || '0');
         const prefixIn = p.in ? 'inset ' : '';
         const colorsLength = colors.length;
@@ -451,10 +447,8 @@ module.exports = (mn) => {
             + handler(p.x || 0, p.y || 0, value, p.r || 0, color).join('px ');
           v = new Array(repeatCount);
           for (i = repeatCount; i--;) v[i] = sample;
-          output[ci] = v.join(',') + important;
+          output[ci] = v.join(',');
         }
-
-        const style = {};
         style[propName] = output;
         return styleWrap(style);
       }, matchs);
@@ -472,13 +466,13 @@ module.exports = (mn) => {
     mn('r' + suffix, (p) => {
       if (p.camel || p.negative) return 0;
       const style = {};
-      style[propName] = (p.num || 10000) + (p.unit || 'px') + p.i;
-      return styleWrap(style);
+      style[propName] = (p.num || 10000) + (p.unit || 'px');
+      return styleWrap(style, 2);
     });
   });
 
   forIn({
-    f: ['font-size', 14, 1],
+    f: ['fontSize', 14, 1],
     r: ['borderRadius', 10000],
     sw: ['strokeWidth', 0],
     olw: ['outlineWidth', 0, 1],
@@ -488,48 +482,47 @@ module.exports = (mn) => {
     mn(pfx, (p) => {
       if (p.camel || p.negative) return 0;
       const style = {};
-      style[propName] = (p.num || defaultValue) + (p.unit || 'px') + p.i;
+      style[propName] = (p.num || defaultValue) + (p.unit || 'px');
       return styleWrap(style, priority);
     });
   });
 
-  mn('z', (p) => {
-    return p.camel ? 0 : styleWrap({
-      zIndex: (p.num || '1') + p.i,
-    });
+  mn('z', (p, num) => {
+    return p.camel ? 0 : ((num = p.num) ? styleWrap({
+      zIndex: num,
+    }) : normalizeDefault(p, 0, 1));
   });
 
-  mn('o', (p) => {
-    return p.camel || p.negative ? 0 : styleWrap({
-      opacity: '' + toFixed((p.num || 0) * 0.01) + p.i,
-    });
+  mn('o', (p, num) => {
+    return p.camel || p.negative ? 0 : ((num = p.num) ? styleWrap({
+      opacity: toFixed((p.num || 0) * 0.01),
+    }) : normalizeDefault(p));
   });
 
-  mn('lh', (p) => {
-    const num = p.num;
-    const unit = p.unit;
-    return p.camel ? 0 : styleWrap({
-      lineHeight: (num ? (unit === '%'
-        ? toFixed(num * 0.01) : (num + (unit || 'px'))) : '1') + p.i,
-    });
+  mn('lh', (p, num, unit) => {
+    return p.camel ? 0 : (
+      unit = p.unit,
+      (num = p.num) ? styleWrap({
+        lineHeight: num == '0' ? num : (
+          unit === '%' ? toFixed(num * 0.01) : (num + (unit || 'px'))
+        ),
+      }) : normalizeDefault(p, 0, 1)
+    );
   });
 
-  mn('tsa', (p) => {
-    const camel = p.camel;
-    return p.negative ? 0 : styleWrap({
-      textSizeAdjust: (camel
+  mn('tsa', (p, num, camel) => {
+    return p.negative ? 0 : (p.value ? styleWrap({
+      textSizeAdjust: (camel = p.camel)
         ? lowerFirst(camel)
-        : ((p.num || '100') + (p.unit || '%'))) + p.i,
-    });
+        : ((num = p.num) == '0' ? num : (num + (p.unit || '%'))),
+    }) : normalizeDefault(p, 0, 100));
   });
-  mn('olo', (p) => {
-    const camel = p.camel;
-    return styleWrap({
-      outlineOffset: (camel
+  mn('olo', (p, num, camel) => {
+    return (p.value ? styleWrap({
+      outlineOffset: (camel = p.camel)
         ? lowerFirst(camel)
-        : (p.value || '0') + (p.unit || 'px')
-      ) + p.i,
-    });
+        : ((num = p.num) == '0' ? num : (num + (p.unit || 'px'))),
+    }) : normalizeDefault(p));
   });
 
   (() => {
@@ -539,21 +532,21 @@ module.exports = (mn) => {
     const regexp = /(\\_)|(_)/g;
 
     forIn({
-      apc: ['-webkit-appearance', 0],
+      apc: ['appearance', 0],
 
       tn: ['transition', 0],
       tp: ['transitionProperty', 1],
+      ttf: ['transitionTimingFunction', 1],
 
-      bgp: ['backgroundPosition', 0],
+      bgp: ['backgroundPosition', 1],
       bgpx: ['backgroundPositionX', 1],
       bgpy: ['backgroundPositionY', 1],
 
-      bgs: ['backgroundSize', 0],
-      bga: ['backgroundAttachment', 0],
+      bgs: ['backgroundSize', 1],
+      bga: ['backgroundAttachment', 1],
+      bgcp: ['backgroundClip', 1],
 
-      bgr: ['backgroundRepeat', 0],
-      bgrx: ['backgroundRepeatX', 1],
-      bgry: ['backgroundRepeatY', 1],
+      bgr: ['backgroundRepeat', 1],
 
       ol: ['outline', 0],
       ols: ['outlineStyle', 1],
@@ -561,27 +554,33 @@ module.exports = (mn) => {
       ovx: ['overflowX', 1],
       ovy: ['overflowY', 1],
 
-      gt: ['gridTemplate', 0],
-      gtc: ['gridTemplateColumns', 1],
-      gtr: ['gridTemplateRows', 1],
-      gar: ['gridAutoRows', 0],
+      g: ['grid', 0],
+      gt: ['gridTemplate', 1],
+      gtc: ['gridTemplateColumns', 2],
+      gtr: ['gridTemplateRows', 2],
+      gac: ['gridAutoColumns', 1],
+      gar: ['gridAutoRows', 1],
+      gaf: ['gridAutoFlow', 1],
 
-      gg: ['gridGap', 0],
+      gg: ['gridGap', 1],
+      ggc: ['gridColumnGap', 2],
+      ggr: ['gridRowGap', 2],
 
-      gr: ['gridRow', 0],
-      gc: ['gridColumn', 0],
+      gr: ['gridRow', 1],
+      gc: ['gridColumn', 1],
 
       fx: ['flex', 0],
-      fxd: ['flexDirection', 0],
-      fxb: ['flexBasis', 0],
-      fxw: ['flexWrap', 0],
+      fxd: ['flexDirection', 1],
+      fxb: ['flexBasis', 1],
+      fxf: ['flexFlow', 1],
+      fxw: ['flexWrap', 1],
+      fxg: ['flexGrow', 1],
+      fxs: ['flexShrink', 1],
 
       or: ['order', 0],
-      fs: ['font-style', 1],
       jc: ['justifyContent', 0],
       ai: ['alignItems', 0],
       tt: ['textTransform', 0],
-      ttf: ['transitionTimingFunction', 0],
       td: ['textDecoration', 0],
       to: ['textOverflow', 0],
       cr: ['cursor', 0],
@@ -597,16 +596,18 @@ module.exports = (mn) => {
       bsp: ['borderSpacing', 0],
       bxz: ['boxSizing', 0],
       font: ['font', 0],
+      fs: ['font-style', 1],
     }, ([propName, priority], essenceName) => {
-      mn(essenceName, (p) => {
-        const suffix = lowerFirst(p.suffix || '');
-        const style = {};
-        style[propName] = replace(
-            suffix[0] == '_' ? snackLeftTrim(suffix) : camelToKebabCase(suffix),
-            regexp,
-            replacer,
-        ) + p.i;
-        return styleWrap(style, priority || 0);
+      mn(essenceName, (p, suffix, style) => {
+        return (suffix = lowerFirst(p.suffix || ''))
+          ? (style = {}, style[propName] = replace(
+              suffix[0] == '_'
+                ? snackLeftTrim(suffix)
+                : camelToKebabCase(suffix),
+              regexp,
+              replacer,
+          ), styleWrap(style, priority || 0))
+          : 0;
       });
     });
 
@@ -621,7 +622,7 @@ module.exports = (mn) => {
           regexp, replacer,
         )
             .split(/(?:\s*,\s*)+/)
-            .map(__wr).join(',') + p.i,
+            .map(__wr).join(','),
       }, 1);
     });
     mn('ctt', (p) => {
@@ -629,28 +630,28 @@ module.exports = (mn) => {
       return styleWrap({
         content: (s ? ('"'
           + replace((snackLeftTrim(s) || ' '), regexp, replacer)
-          + '"') : 'none') + p.i,
+          + '"') : 'none'),
       });
     });
     mn('rs', (p) => {
       const s = p.suffix;
       return s ? styleWrap({
-        borderRadius: replace(snackLeftTrim(s), regexp, replacer) + p.i,
+        borderRadius: replace(snackLeftTrim(s), regexp, replacer),
       }) : 0;
     });
   })();
 
   forIn({
     '': 'width',
-    l: 'marginLeft', // eslint-disable-line
-    r: 'marginRight', // eslint-disable-line
+    l: 'marginLeft',
+    r: 'marginRight',
   }, (propName, suffix) => {
     mn('col' + suffix, (p) => {
       return p.camel || p.negative ? 0 : {
         exts: ['hmin1-i'],
         style: {
           [propName]: ''
-            + toFixed(100 * (p.num || 12) / (p.total || 12)) + '%' + p.i,
+            + toFixed(100 * (p.num || 12) / (p.total || 12)) + '%',
         },
       };
     }, '^([0-9]+(/([0-9]+):total)?)?(.*)$');
@@ -669,7 +670,7 @@ module.exports = (mn) => {
         return camelToKebabCase(options && options[0] || funcName)
           + '(' + (matchs[2] || options && options[1] || '')
           + (matchs[3] || options && options[2] || '') + ') ';
-      }).join('') + p.i,
+      }).join(''),
     }));
   })({
     blur: ['blur', 4, 'px'],
@@ -685,10 +686,10 @@ module.exports = (mn) => {
   mn('ratio', (p) => {
     return p.negative || p.camel ? 0 : {
       style: {
-        position: 'relative' + p.i,
+        position: 'relative',
         paddingTop: 'calc(' + (100 * intval(p.oh || p.h, 100, 1)
           / intval(p.w || 100, 1, 1)) + '% '
-          + (p.sign || '+') + ' ' + (p.add || '0') + 'px)' + p.i,
+          + (p.sign || '+') + ' ' + (p.add || '0') + 'px)',
       },
       childs: {
         overlay: {
