@@ -109,17 +109,58 @@ See source:
 | last       | :last-child                                      |
 
 
-**Example:**  
+**Examples:**  
 
-
-Input:  
 ```html
-<a m="o70:h">link</a>
+<a class="o70:h">link</a>
 ```
-Output:  
 ```css
-[m~='o70:h']:hover {
-  opacity: 0.7;
+.o70\:h:hover {
+  opacity: .7;
+}
+```
+
+-------------------------
+```html
+<div class="bg01:odd">...</div>
+```
+```css
+.bg01\:odd:nth-child(2n+1) {
+  background: rgb(0,0,0);
+  background: rgba(0,0,0,.07);
+}
+```
+
+-------------------------
+```html
+<div class="bg01:n[n3+1]">...</div>
+```
+```css
+.bg01\:n\[n3\+1\]:nth-child(n3+1) {
+  background: rgb(0,0,0);
+  background: rgba(0,0,0,.07);
+}
+```
+
+-------------------------
+```html
+<div class="bg01:not[.anyClass]">...</div>
+```
+```css
+.bg01\:not\[\.anyClass\]:not(.anyClass) {
+  background: rgb(0,0,0);
+  background: rgba(0,0,0,.07);
+}
+```
+
+-------------------------
+```html
+<div class="bg01:not[[class*=any]\:hover]">...</div>
+```
+```css
+.bg01\:not\[\[class\*\=any\]\\\:hover\]:not([class*=any]:hover) {
+  background: rgb(0,0,0);
+  background: rgba(0,0,0,.07);
 }
 ```
 

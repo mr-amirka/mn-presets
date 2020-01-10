@@ -31,7 +31,7 @@ function normalizeValue(p) {
 }
 function normalizeDefault(p, priority, def) {
   return {
-    exts: [p.name + (def || '0') + p.ni],
+    exts: [p.name + (def || 0) + p.ni],
     priority: priority || 0,
   };
 }
@@ -39,14 +39,16 @@ function normalizeDefault(p, priority, def) {
 module.exports = (mn) => {
   const {utils, setKeyframes} = mn;
   const {
+    map,
+    filter,
     forIn,
     forEach,
-    joinArrays,
     upperFirst,
     lowerFirst,
     camelToKebabCase,
     size,
     intval,
+    floatval,
     reduce,
     color: getColor,
     colorGetBackground,
@@ -196,83 +198,61 @@ module.exports = (mn) => {
   mn('layoutRow', {
     exts: ['layout'],
     style: {
-      '-webkit-box-direction': 'normal',
-      '-webkit-box-orient': 'horizontal',
-      '-webkit-flex-direction': 'row',
-      'flex-direction': 'row',
-
-      '-webkit-box-pack': 'start',
-      '-webkit-justify-content': 'flex-start',
-      'justify-content': 'flex-start',
-
-      '-webkit-box-align': 'center',
-      '-webkit-align-items': 'center',
-      'align-items': 'center',
-      '-webkit-align-content': 'center',
-      'align-content': 'center',
+      boxDirection: 'normal',
+      boxOrient: 'horizontal',
+      flexDirection: 'row',
+      boxPack: 'start',
+      justifyContent: 'flex-start',
+      boxAlign: 'center',
+      alignItems: 'center',
+      alignContent: 'center',
     },
   });
 
   mn('layoutColumn', {
     exts: ['layout'],
     style: {
-      '-webkit-box-direction': 'normal',
-      '-webkit-box-orient': 'vertical',
-      '-webkit-flex-direction': 'column',
-      'flex-direction': 'column',
+      boxDirection: 'normal',
+      boxOrient: 'vertical',
+      flexDirection: 'column',
     },
   });
 
   // flex horizontal align
   forIn({
-    start: {'-webkit-box-pack': 'start',
-      '-webkit-justify-content': 'flex-start', 'justify-content': 'flex-start'},
-    center: {'-webkit-box-pack': 'center',
-      '-webkit-justify-content': 'center', 'justify-content': 'center'},
-    end: {'-webkit-box-pack': 'end',
-      '-webkit-justify-content': 'flex-end', 'justify-content': 'flex-end'},
-    around: {'-webkit-justify-content': 'space-around',
-      'justify-content': 'space-around'},
-    between: {'-webkit-box-pack': 'justify',
-      '-webkit-justify-content': 'space-between',
-      'justify-content': 'space-between'},
+    start: {boxPack: 'start', justifyContent: 'flex-start'},
+    center: {boxPack: 'center', justifyContent: 'center'},
+    end: {boxPack: 'end', justifyContent: 'flex-end'},
+    around: {justifyContent: 'space-around'},
+    between: {boxPack: 'justify', justifyContent: 'space-between'},
   }, (style, essenceName) => mn(
-      'fha' + upperFirst(essenceName),
-      styleWrap(style, 1),
+      'fha' + upperFirst(essenceName), styleWrap(style, 1),
   ));
 
   // flex vertical align
   forIn({
     start: {
-      '-webkit-box-align': 'start',
-      '-webkit-align-items': 'flex-start',
-      'align-items': 'flex-start',
-      '-webkit-align-content': 'flex-start',
-      'align-content': 'flex-start',
+      boxAlign: 'start',
+      alignItems: 'flex-start',
+      alignContent: 'flex-start',
     },
     center: {
-      '-webkit-box-align': 'center',
-      '-webkit-align-items': 'center',
-      'align-items': 'center',
-      '-webkit-align-content': 'center',
-      'align-content': 'center',
+      boxAlign: 'center',
+      alignItems: 'center',
+      alignContent: 'center',
     },
     end: {
-      '-webkit-box-align': 'end',
-      '-webkit-align-items': 'flex-end',
-      'align-items': 'flex-end',
-      '-webkit-align-content': 'flex-end',
-      'align-content': 'flex-end',
+      boxAlign: 'end',
+      alignItems: 'flex-end',
+      alignContent: 'flex-end',
     },
     stretch: {
-      '-webkit-box-align': 'stretch',
-      '-webkit-align-items': 'stretch',
-      'align-items': 'stretch',
-      '-webkit-align-content': 'stretch',
-      'align-content': 'stretch',
+      boxAlign: 'stretch',
+      alignItems: 'stretch',
+      alignContent: 'stretch',
     },
   }, (style, essenceName) => mn(
-      'fva' + upperFirst(essenceName), styleWrap(style),
+      'fva' + upperFirst(essenceName), styleWrap(style, 1),
   ));
 
   forIn({
@@ -506,7 +486,7 @@ module.exports = (mn) => {
         lineHeight: num == '0' ? num : (
           unit === '%' ? toFixed(num * 0.01) : (num + (unit || 'px'))
         ),
-      }) : normalizeDefault(p, 0, 1)
+      }) : normalizeDefault(p, 0, '100%')
     );
   });
 
@@ -528,6 +508,9 @@ module.exports = (mn) => {
   (() => {
     function replacer(all, escaped) {
       return escaped ? '_' : ' ';
+    }
+    function normalize(v) {
+      return replace(v, regexp, replacer);
     }
     const regexp = /(\\_)|(_)/g;
 
@@ -580,6 +563,8 @@ module.exports = (mn) => {
       or: ['order', 0],
       jc: ['justifyContent', 0],
       ai: ['alignItems', 0],
+      as: ['alignSelf', 0],
+      ac: ['alignContent', 0],
       tt: ['textTransform', 0],
       td: ['textDecoration', 0],
       to: ['textOverflow', 0],
@@ -589,7 +574,7 @@ module.exports = (mn) => {
       va: ['verticalAlign', 0],
       d: ['display', 0],
       e: ['pointerEvents', 0],
-      us: ['user-select', 0],
+      us: ['userSelect', 0],
       v: ['visibility', 0],
       ts: ['transformStyle', 0],
       mbm: ['mixBlendMode', 0],
@@ -600,12 +585,10 @@ module.exports = (mn) => {
     }, ([propName, priority], essenceName) => {
       mn(essenceName, (p, suffix, style) => {
         return (suffix = lowerFirst(p.suffix || ''))
-          ? (style = {}, style[propName] = replace(
+          ? (style = {}, style[propName] = normalize(
               suffix[0] == '_'
                 ? snackLeftTrim(suffix)
                 : camelToKebabCase(suffix),
-              regexp,
-              replacer,
           ), styleWrap(style, priority || 0))
           : 0;
       });
@@ -614,29 +597,24 @@ module.exports = (mn) => {
     function __wr(v) {
       return v[0] == '-' ? '"' + v.substr(1) + '"' : v;
     }
-    mn('ff', (p) => {
-      const suffix = p.suffix;
-      return suffix && styleWrap({
-        fontFamily: replace(
-          suffix[0] == '_' ? snackLeftTrim(suffix) : lowerFirst(suffix),
-          regexp, replacer,
-        )
-            .split(/(?:\s*,\s*)+/)
-            .map(__wr).join(','),
+    mn('ff', (p, suffix) => {
+      return (s = p.suffix) && styleWrap({
+        fontFamily: map(
+            normalize(s[0] == '_' ? snackLeftTrim(s) : lowerFirst(s))
+                .split(/(?:\s*,\s*)+/)
+            , __wr).join(','),
       }, 1);
     });
-    mn('ctt', (p) => {
-      const s = p.suffix;
+    mn('ctt', (p, s) => {
       return styleWrap({
-        content: (s ? ('"'
-          + replace((snackLeftTrim(s) || ' '), regexp, replacer)
-          + '"') : 'none'),
+        content: (s = p.suffix)
+          ? normalize(snackLeftTrim(s) || '" "')
+          : 'none',
       });
     });
-    mn('rs', (p) => {
-      const s = p.suffix;
-      return s ? styleWrap({
-        borderRadius: replace(snackLeftTrim(s), regexp, replacer),
+    mn('rs', (p, s) => {
+      return (s = p.suffix) ? styleWrap({
+        borderRadius: normalize(snackLeftTrim(s)),
       }) : 0;
     });
   })();
@@ -660,18 +638,21 @@ module.exports = (mn) => {
   ((essences) => {
     const regexpName = /^([A-Za-z]+)([0-9]*)(.*)$/;
     const regexpSep = /_+/;
-    mn('ft', (p) => styleWrap({
-      filter: lowerFirst(p.suffix).split(regexpSep).map((v) => {
-        if (!v) return '';
-        const matchs = regexpName.exec(v);
-        const funcName = matchs[1];
-        if (!funcName) return '';
-        const options = essences[funcName];
-        return camelToKebabCase(options && options[0] || funcName)
-          + '(' + (matchs[2] || options && options[1] || '')
-          + (matchs[3] || options && options[2] || '') + ') ';
-      }).join(''),
-    }));
+    mn('ft', (p, v) => {
+      return (v = filter(map(
+          p.suffix.split(regexpSep),
+          (v, matchs, name, options) => {
+            return v && (matchs = regexpName.exec(v)) ? (
+              options = essences[name = lowerFirst(matchs[1])],
+              camelToKebabCase(options && options[0] || name)
+                + '(' + (matchs[2] || options && options[1] || '')
+                + (matchs[3] || options && options[2] || '') + ')'
+            ) : 0;
+          },
+      )).join(' ')) ? styleWrap({
+        filter: v,
+      }) : 0;
+    });
   })({
     blur: ['blur', 4, 'px'],
     gray: ['grayscale', 100, '%'],
@@ -683,20 +664,24 @@ module.exports = (mn) => {
     sepia: ['sepia', 100, '%'],
   });
 
-  mn('ratio', (p) => {
-    return p.negative || p.camel ? 0 : {
-      style: {
-        position: 'relative',
-        paddingTop: 'calc(' + (100 * intval(p.oh || p.h, 100, 1)
-          / intval(p.w || 100, 1, 1)) + '% '
-          + (p.sign || '+') + ' ' + (p.add || '0') + 'px)',
-      },
-      childs: {
-        overlay: {
-          selectors: ['>*'],
-          exts: ['abs' + p.ni, 's' + p.ni],
+  mn('ratio', (p, add, v) => {
+    return p.negative || p.camel ? 0 : (
+      v = '' + (100 * floatval(p.oh || p.h || 100, 1, 1)
+        / floatval(p.w || 100, 1, 1)) + '% ',
+      {
+        style: {
+          position: 'relative',
+          paddingTop: (add = p.add) ? (
+            'calc(' + v + p.sign + ' ' + add + 'px)'
+          ) : v,
         },
-      },
-    };
+        childs: {
+          overlay: {
+            selectors: ['>*'],
+            exts: ['abs' + p.ni, 's' + p.ni],
+          },
+        },
+      }
+    );
   }, '((((\\d+):w)x((\\d+):h))|(\\d+):oh)?(([-+]):sign(\\d+):add)?');
 };
