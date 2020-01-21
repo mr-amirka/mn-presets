@@ -8,7 +8,16 @@
 const reTrimSnackLeft = /^_+/g;
 const reTrimKebabLeft = /^-+/g;
 const reZero =/^0+|\.?0+$/g;
+const regexpSpaceNormalize = /(\\_)|(_)/g;
+const colorPattern
+  = '^(([A-Z][a-z][A-Za-z]+):camel|([A-Fa-f0-9]+(\\.[0-9]+)?):color):value';
 
+function replacerSpaceNormalize(all, escaped) {
+  return escaped ? '_' : ' ';
+}
+function spaceNormalize(v) {
+  return replace(v, regexpSpaceNormalize, replacerSpaceNormalize);
+}
 function replace(v, from, to) {
   return v.replace(from, to);
 }
@@ -35,6 +44,9 @@ function normalizeDefault(p, priority, def) {
     priority: priority || 0,
   };
 }
+function stylePosition(position, priority) {
+  return styleWrap({position: position}, priority);
+}
 
 module.exports = (mn) => {
   const {utils, setKeyframes} = mn;
@@ -54,7 +66,24 @@ module.exports = (mn) => {
     colorGetBackground,
   } = utils;
 
-  const defaultSides = reduce({
+  function toKebabCase(v) {
+    return camelToKebabCase(lowerFirst(v));
+  }
+
+  function synonymProvider(propName, synonyms, priority) {
+    return (p, s, style, synonym) => {
+      synonym = synonyms[s = p.suffix];
+      return synonym || s
+        ? (style = {}, style[propName] = synonym || spaceNormalize(
+            s[0] == '_'
+              ? snackLeftTrim(s)
+              : toKebabCase(s),
+        ), styleWrap(style, priority))
+        : 0;
+    };
+  }
+
+  const defaultSides = map({
     '': [''],
     t: ['top'],
     b: ['bottom'],
@@ -73,13 +102,11 @@ module.exports = (mn) => {
     rt: ['top', 'right'],
     lb: ['bottom', 'left'],
     rb: ['bottom', 'right'],
-  }, (dst, sides, sideKey) => {
-    dst[sideKey] = reduce(sides, sidesIteratee, {});
-    return dst;
-  }, {});
+  }, (sides) => reduce(sides, sidesIteratee, {}));
 
   forIn(defaultSides, (sides, suffix) => {
     const priority = suffix ? (4 - size(sides)) : 0;
+    const synonyms = {A: 'auto'};
 
     function sidesSetter(handle) {
       const propsMap = {};
@@ -92,6 +119,16 @@ module.exports = (mn) => {
         return style;
       };
     }
+    function handleProvider(sidesSet) {
+      return (p, camel) => {
+        return p.value ? styleWrap(
+            sidesSet(((camel = p.camel)
+              ? synonyms[camel] || toKebabCase(camel)
+              : normalizeValue(p))),
+            priority,
+        ) : normalizeDefault(p, priority);
+      };
+    }
 
     forIn({
       p: ['padding'],
@@ -100,55 +137,44 @@ module.exports = (mn) => {
     }, (args, pfx) => {
       const propName = args[0];
       const propSuffix = args[1] || '';
-      const sidesSet = sidesSetter((side) => propName + side + propSuffix);
-      mn(pfx + suffix, (p) => {
-        const camel = p.camel;
-        return p.value ? styleWrap(
-            sidesSet((camel ? lowerFirst(camel) : normalizeValue(p))),
-            priority,
-        ) : normalizeDefault(p, priority);
-      });
+      mn(pfx + suffix, handleProvider(
+          sidesSetter((side) => propName + side + propSuffix),
+      ));
     });
 
-    (() => {
-      const sidesSet = suffix
+    mn('s' + suffix, handleProvider(
+      suffix
         ? sidesSetter((side) => replace(side, reTrimKebabLeft, ''))
         : (v) => ({
           top: v,
           bottom: v,
           left: v,
           right: v,
-        });
+        }),
+    ));
 
-      mn('s' + suffix, (p) => {
-        return p.camel ? 0 : (p.value ? styleWrap(
-            sidesSet(normalizeValue(p)),
-            priority,
-        ) : normalizeDefault(p, priority));
+    ((sidesSet) => {
+      mn('bs' + suffix, (p, v) => {
+        return (v = p.suffix)
+          ? styleWrap(sidesSet(toKebabCase(v)), priority)
+          : normalizeDefault(p, priority, 'solid');
       });
-    })();
+    })(sidesSetter((side) => 'border' + side + '-style'));
 
-    (() => {
-      const sidesSet = sidesSetter((side) => 'border' + side + '-style');
-      mn('bs' + suffix, (p) => {
-        return styleWrap(
-            sidesSet(camelToKebabCase(lowerFirst(p.suffix || 'solid'))),
-            priority,
-        );
-      });
-    })();
-
-    (() => {
-      const sidesSet = sidesSetter((side) => 'border' + side + '-color');
-      mn('bc' + suffix, (p) => {
-        const {value} = p;
-        return value
-          ? styleWrap(sidesSet(getColor(value || '0')), priority)
+    ((sidesSet) => {
+      mn('bc' + suffix, (p, v) => {
+        return (v = p.value)
+          ? styleWrap(sidesSet(getColor(v)), priority)
           : normalizeDefault(p, priority);
-      }, '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$');
-    })();
+      }, colorPattern);
+    })(sidesSetter((side) => 'border' + side + '-color'));
   });
 
+
+  const sizeSynonyms = {
+    A: 'auto',
+    N: 'none',
+  };
   forIn({
     sq: ['width', 'height'],
     w: ['width'],
@@ -168,11 +194,13 @@ module.exports = (mn) => {
         const {sign, camel} = p;
         const num = p.negative ? 0 : p.num;
         const style = {};
-        let propName;
-        let sz = camel
-          ? camel.toLowerCase()
-          : (num ? (num == '0' ? num: (num + (p.unit || 'px'))) : '100%');
-        if (sign) sz = 'calc(' + sz + ' ' + sign + ' ' + p.add + 'px)';
+        let propName, v; // eslint-disable-line
+        const sz = camel
+          ? sizeSynonyms[camel] || toKebabCase(camel)
+          : (
+            v = (num ? (num == '0' ? num: (num + (p.unit || 'px'))) : '100%'),
+            sign ? 'calc(' + v + ' ' + sign + ' ' + p.add + 'px)' : v
+          );
         for (propName in propMap) style[propName] = sz; // eslint-disable-line
         return styleWrap(style, priority);
       }, '(([-+]):sign([0-9]+):add)$');
@@ -273,6 +301,8 @@ module.exports = (mn) => {
     fill: ['fill'],
     olc: ['outlineColor', 1],
     bgc: ['backgroundColor', 1],
+    temc: ['textEmphasisColor', 1],
+    tdc: ['textDecorationColor', 1],
   }, (options, pfx) => {
     const propName = options[0];
     const priority = options[1] || 0;
@@ -280,12 +310,12 @@ module.exports = (mn) => {
       const style = {};
       style[propName] = getColor(p.value || '0');
       return styleWrap(style, priority);
-    }, '^(([A-Z][a-z][A-Za-z]+):camel|([A-F0-9]+):color):value(.*)?$');
+    }, colorPattern);
   });
 
   // background: (...)
   mn('bg', (p, v) => {
-    return p.negative ? 0 : ((v = p.suffix) ? styleWrap({
+    return !p.negative && ((v = p.suffix) ? styleWrap({
       background: colorGetBackground(v),
     }) : normalizeDefault(p));
   });
@@ -321,25 +351,31 @@ module.exports = (mn) => {
     });
   });
 
-  mn('fw', (p) => {
-    const camel = p.camel;
-    return p.negative ? 0 : styleWrap({
-      fontWeight: camel
-        ? camelToKebabCase(lowerFirst(camel))
+  const fontWeightSynonyms = {
+    N: 'normal',
+    B: 'bold',
+    BR: 'bolder',
+    LR: 'lighter',
+  };
+  mn('fw', (p, camel) => {
+    return !p.negative && styleWrap({
+      fontWeight: (camel = p.camel)
+        ? fontWeightSynonyms[camel] || toKebabCase(camel)
         : (100 * intval(p.num, 1, 1, 9)),
     }, 1);
   });
 
-  forIn({
-    rlv: ['relative', 1],
-    abs: ['absolute', 2],
-    fixed: ['fixed', 3],
-    'static': ['static', 4], // eslint-disable-line
-  }, (options, essenceName) => {
-    mn(essenceName, (p) => styleWrap(
-        {position: options[0]},
-        options[1] || 0),
-    );
+  // position
+  mn({
+    posR: stylePosition('relative', 0),
+    posA: stylePosition('absolute', 1),
+    posF: stylePosition('fixed', 2),
+    posS: stylePosition('static', 3),
+    pos: 'posR',
+    rlv: 'posR',
+    abs: 'posA',
+    fixed: 'posF',
+    'static': 'posS', // eslint-disable-line
   });
 
   mn('x', (p) => {
@@ -357,24 +393,21 @@ module.exports = (mn) => {
     }); // eslint-disable-next-line
   }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
 
-  (() => {
-    let inited;
-    mn('spnr', (p) => {
-      let v = p.value;
-      if (isNaN(v = v ? parseInt(v) : 3000) || v < 1) return 0;
-
-      inited || (inited = 1, setKeyframes('spinner-animate', {
-        from: {transform: 'rotateZ(0deg)'},
-        to: {transform: 'rotateZ(360deg)'},
-      }), mn.keyframesCompile());
-
-      return styleWrap({
-        animation: 'spinner-animate ' + v + 'ms infinite linear',
-      });
+  ((inited) => {
+    mn('spnr', (p, v) => {
+      return isNaN(v = (v = p.value) ? parseInt(v) : 3000) || v < 1 ? 0 : (
+        inited || (inited = 1, setKeyframes('spinner-animate', {
+          from: {transform: 'rotateZ(0deg)'},
+          to: {transform: 'rotateZ(360deg)'},
+        }), mn.keyframesCompile()),
+        styleWrap({
+          animation: 'spinner-animate ' + v + 'ms infinite linear',
+        })
+      );
     });
   })();
 
-  ['x', 'y', 'z'].forEach((suffix) => {
+  forEach(['x', 'y', 'z'], (suffix) => {
     const prefix = 'rotate' + suffix.toUpperCase() + '(';
     mn('r' + suffix, (p, v) => {
       return (v = p.value) ? styleWrap({
@@ -443,27 +476,31 @@ module.exports = (mn) => {
     rb: 'bottom-right',
   }, (side, suffix) => {
     const propName = 'border-' + side + '-radius';
-    mn('r' + suffix, (p) => {
-      if (p.camel || p.negative) return 0;
-      const style = {};
-      style[propName] = (p.num || 10000) + (p.unit || 'px');
-      return styleWrap(style, 2);
+    mn('r' + suffix, (p, style) => {
+      return p.camel || p.negative ? 0 : (
+        style = {},
+        style[propName] = (p.num || 10000) + (p.unit || 'px'),
+        styleWrap(style, 2)
+      );
     });
   });
 
   forIn({
     f: ['fontSize', 14, 1],
     r: ['borderRadius', 10000],
-    sw: ['strokeWidth', 0],
+    sw: ['strokeWidth'],
     olw: ['outlineWidth', 0, 1],
   }, (options, pfx) => {
     const [propName, defaultValue] = options;
     const priority = options[2] || 0;
-    mn(pfx, (p) => {
-      if (p.camel || p.negative) return 0;
-      const style = {};
-      style[propName] = (p.num || defaultValue) + (p.unit || 'px');
-      return styleWrap(style, priority);
+    mn(pfx, (p, style, camel) => {
+      return !p.negative && (
+        style = {},
+        style[propName] = (camel = p.camel)
+          ? toKebabCase(camel)
+          : (p.num || defaultValue) + (p.unit || 'px'),
+        styleWrap(style, priority)
+      );
     });
   });
 
@@ -493,131 +530,289 @@ module.exports = (mn) => {
   mn('tsa', (p, num, camel) => {
     return p.negative ? 0 : (p.value ? styleWrap({
       textSizeAdjust: (camel = p.camel)
-        ? lowerFirst(camel)
-        : ((num = p.num) == '0' ? num : (num + (p.unit || '%'))),
-    }) : normalizeDefault(p, 0, 100));
+        ? toKebabCase(camel)
+        : ((num = p.num) == '0' ? num : (num + (p.unit || 'px'))),
+    }) : normalizeDefault(p, 0, '100%'));
   });
+
+  mn('fsa', (p, num, camel) => {
+    return p.negative ? 0 : (p.value ? styleWrap({
+      fontSizeAdjust: (camel = p.camel)
+        ? (camel == 'N' ? 'none' : toKebabCase(camel))
+        : ((num = p.num) == '0' ? num : (num + (p.unit || 'px'))),
+    }) : 0);
+  });
+
   mn('olo', (p, num, camel) => {
     return (p.value ? styleWrap({
       outlineOffset: (camel = p.camel)
-        ? lowerFirst(camel)
+        ? toKebabCase(camel)
         : ((num = p.num) == '0' ? num : (num + (p.unit || 'px'))),
     }) : normalizeDefault(p));
   });
 
-  (() => {
-    function replacer(all, escaped) {
-      return escaped ? '_' : ' ';
-    }
-    function normalize(v) {
-      return replace(v, regexp, replacer);
-    }
-    const regexp = /(\\_)|(_)/g;
+  mn('d', synonymProvider('display', {
+    '': 'block',
+    B: 'block',
+    N: 'none',
+    F: 'flex',
+    IF: 'inline-flex',
+    I: 'inline',
+    IB: 'inline-block',
+    LI: 'list-item',
+    RI: 'run-in',
+    CP: 'compact',
+    TB: 'table',
+    ITB: 'inline-table',
+    TBCP: 'table-caption',
+    TBCL: 'table-column',
+    TBCLG: 'table-column-group',
+    TBHG: 'table-header-group',
+    TBFG: 'table-footer-group',
+    TBR: 'table-row',
+    TBRG: 'table-row-group',
+    TBC: 'table-cell',
+    RB: 'ruby',
+    RBB: 'ruby-base',
+    RBBG: 'ruby-base-group',
+    RBT: 'ruby-text',
+    RBTG: 'ruby-text-group',
+  }));
 
-    forIn({
-      apc: ['appearance', 0],
+  mn('cl', synonymProvider('clear', {
+    '': 'both',
+    B: 'both',
+    N: 'none',
+    L: 'left',
+    R: 'right',
+  }));
 
-      tn: ['transition', 0],
-      tp: ['transitionProperty', 1],
-      ttf: ['transitionTimingFunction', 1],
+  mn('v', synonymProvider('visibility', {
+    '': 'hidden',
+    V: 'visible',
+    H: 'hidden',
+    C: 'collapse',
+  }));
 
-      bgp: ['backgroundPosition', 1],
-      bgpx: ['backgroundPositionX', 1],
-      bgpy: ['backgroundPositionY', 1],
+  forIn({'': 0, x: 1, y: 1}, (priority, suffix) => {
+    mn('ov' + suffix, synonymProvider('overflow' + suffix.toUpperCase(), {
+      '': 'hidden',
+      V: 'visible',
+      H: 'hidden',
+      S: 'scroll',
+      A: 'auto',
+    }, priority));
+  });
 
-      bgs: ['backgroundSize', 1],
-      bga: ['backgroundAttachment', 1],
-      bgcp: ['backgroundClip', 1],
+  mn('ovs', synonymProvider('overflowStyle', {
+    '': 'scrollbar',
+    S: 'scrollbar',
+    A: 'auto',
+    P: 'panner',
+    M: 'move',
+    MQ: 'marquee',
+  }));
 
-      bgr: ['backgroundRepeat', 1],
+  mn('cp', synonymProvider('clip', {
+    A: 'auto',
+    R: 'rect(top right bottom left)',
+  }));
 
-      ol: ['outline', 0],
-      ols: ['outlineStyle', 1],
-      ov: ['overflow', 0],
-      ovx: ['overflowX', 1],
-      ovy: ['overflowY', 1],
+  mn('rsz', synonymProvider('resize', {
+    '': 'none',
+    N: 'none',
+    B: 'both',
+    H: 'horizontal',
+    V: 'vertical',
+  }));
 
-      g: ['grid', 0],
-      gt: ['gridTemplate', 1],
-      gtc: ['gridTemplateColumns', 2],
-      gtr: ['gridTemplateRows', 2],
-      gac: ['gridAutoColumns', 1],
-      gar: ['gridAutoRows', 1],
-      gaf: ['gridAutoFlow', 1],
+  mn('cr', synonymProvider('cursor', {
+    '': 'pointer',
+    A: 'auto',
+    D: 'default',
+    C: 'crosshair',
+    HA: 'hand',
+    HE: 'help',
+    M: 'move',
+    P: 'pointer',
+    T: 'text',
+  }));
 
-      gg: ['gridGap', 1],
-      ggc: ['gridColumnGap', 2],
-      ggr: ['gridRowGap', 2],
+  mn('jc', synonymProvider('justifyContent', {
+    '': 'center',
+    C: 'center',
+    FE: 'flex-end',
+    FS: 'flex-start',
+    SA: 'space-around',
+    SB: 'space-between',
+  }));
 
-      gr: ['gridRow', 1],
-      gc: ['gridColumn', 1],
+  mn('jc', synonymProvider('justifyContent', {
+    '': 'center',
+    C: 'center',
+    FE: 'flex-end',
+    FS: 'flex-start',
+    SA: 'space-around',
+    SB: 'space-between',
+  }));
 
-      fx: ['flex', 0],
-      fxd: ['flexDirection', 1],
-      fxb: ['flexBasis', 1],
-      fxf: ['flexFlow', 1],
-      fxw: ['flexWrap', 1],
-      fxg: ['flexGrow', 1],
-      fxs: ['flexShrink', 1],
+  mn('ai', synonymProvider('alignItems', {
+    '': 'center',
+    C: 'center',
+    B: 'baseline',
+    FE: 'flex-end',
+    FS: 'flex-start',
+    S: 'stretch',
+  }));
 
-      or: ['order', 0],
-      jc: ['justifyContent', 0],
-      ai: ['alignItems', 0],
-      as: ['alignSelf', 0],
-      ac: ['alignContent', 0],
-      tt: ['textTransform', 0],
-      td: ['textDecoration', 0],
-      to: ['textOverflow', 0],
-      cr: ['cursor', 0],
+  mn('bxz', synonymProvider('boxSizing', {
+    '': 'border-box',
+    BB: 'border-box',
+    CB: 'content-box',
+  }));
 
-      ws: ['whiteSpace', 0],
-      va: ['verticalAlign', 0],
-      d: ['display', 0],
-      e: ['pointerEvents', 0],
-      us: ['userSelect', 0],
-      v: ['visibility', 0],
-      ts: ['transformStyle', 0],
-      mbm: ['mixBlendMode', 0],
-      bsp: ['borderSpacing', 0],
-      bxz: ['boxSizing', 0],
-      font: ['font', 0],
-      fs: ['font-style', 1],
-    }, ([propName, priority], essenceName) => {
-      mn(essenceName, (p, suffix, style) => {
-        return (suffix = lowerFirst(p.suffix || ''))
-          ? (style = {}, style[propName] = normalize(
-              suffix[0] == '_'
-                ? snackLeftTrim(suffix)
-                : camelToKebabCase(suffix),
-          ), styleWrap(style, priority || 0))
-          : 0;
-      });
+  mn('fs', synonymProvider('fontStyle', {
+    '': 'italic',
+    N: 'normal',
+    I: 'italic',
+    O: 'oblique',
+  }, 1));
+
+  mn('fv', synonymProvider('fontVariant', {
+    N: 'normal',
+    SC: 'small-caps',
+  }, 1));
+
+  mn('fef', synonymProvider('fontEffect', {
+    N: 'none',
+    EG: 'engrave',
+    EB: 'emboss',
+    O: 'outline',
+  }, 1));
+
+  mn('fsm', synonymProvider('fontSmooth', {
+    A: 'auto',
+    N: 'never',
+    AW: 'always',
+  }, 1));
+
+  mn('fst', synonymProvider('fontStretch', {
+    N: 'normal',
+    UC: 'ultra-condensed',
+    EC: 'extra-condensed',
+    C: 'condensed',
+    SC: 'semi-condensed',
+    SE: 'semi-expanded',
+    E: 'expanded',
+    EE: 'extra-expanded',
+    UE: 'ultra-expanded',
+  }, 1));
+
+  forIn({
+    apc: ['appearance'],
+
+    tn: ['transition'],
+    tp: ['transitionProperty', 1],
+    ttf: ['transitionTimingFunction', 1],
+
+    bgp: ['backgroundPosition', 1],
+    bgpx: ['backgroundPositionX', 1],
+    bgpy: ['backgroundPositionY', 1],
+
+    bgs: ['backgroundSize', 1],
+    bga: ['backgroundAttachment', 1],
+    bgcp: ['backgroundClip', 1],
+
+    bgr: ['backgroundRepeat', 1],
+
+    ol: ['outline'],
+    ols: ['outlineStyle', 1],
+
+    g: ['grid'],
+    gt: ['gridTemplate', 1],
+    gtc: ['gridTemplateColumns', 2],
+    gtr: ['gridTemplateRows', 2],
+    gac: ['gridAutoColumns', 1],
+    gar: ['gridAutoRows', 1],
+    gaf: ['gridAutoFlow', 1],
+
+    gg: ['gridGap', 1],
+    ggc: ['gridColumnGap', 2],
+    ggr: ['gridRowGap', 2],
+
+    gr: ['gridRow', 1],
+    gc: ['gridColumn', 1],
+
+    fx: ['flex'],
+    fxd: ['flexDirection', 1],
+    fxb: ['flexBasis', 1],
+    fxf: ['flexFlow', 1],
+    fxw: ['flexWrap', 1],
+    fxg: ['flexGrow', 1],
+    fxs: ['flexShrink', 1],
+
+    or: ['order'],
+    as: ['alignSelf'],
+    ac: ['alignContent'],
+    tt: ['textTransform'],
+    td: ['textDecoration'],
+    tdl: ['textDecorationLine', 1],
+    tds: ['textDecorationSkip', 1],
+    tdsi: ['textDecorationSkipInk', 2],
+    tdt: ['textDecorationThickness', 1],
+    to: ['textOverflow'],
+
+    ws: ['whiteSpace'],
+    va: ['verticalAlign'],
+    e: ['pointerEvents'],
+    us: ['userSelect'],
+    ts: ['transformStyle'],
+    mbm: ['mixBlendMode'],
+    bsp: ['borderSpacing'],
+    bdrs: ['borderRadius'],
+    zm: ['zoom'],
+    tem: ['textEmphasis'],
+    temp: ['textEmphasisPosition', 1],
+    tems: ['textEmphasisStyle', 1],
+  }, ([propName, priority], essenceName) => {
+    mn(essenceName, (p, s, style) => {
+      return (s = p.suffix)
+        ? (style = {}, style[propName] = spaceNormalize(
+            s[0] == '_'
+              ? snackLeftTrim(s)
+              : toKebabCase(s),
+        ), styleWrap(style, priority || 0))
+        : 0;
     });
+  });
 
-    function __wr(v) {
-      return v[0] == '-' ? '"' + v.substr(1) + '"' : v;
-    }
-    mn('ff', (p, suffix) => {
-      return (s = p.suffix) && styleWrap({
-        fontFamily: map(
-            normalize(s[0] == '_' ? snackLeftTrim(s) : lowerFirst(s))
-                .split(/(?:\s*,\s*)+/)
-            , __wr).join(','),
-      }, 1);
+  mn('font', (p, s) => {
+    return (s = p.s) && styleWrap({
+      font: spaceNormalize(s[0] == '_' ? snackLeftTrim(s) : toKebabCase(s)),
     });
-    mn('ctt', (p, s) => {
-      return styleWrap({
-        content: (s = p.suffix)
-          ? normalize(snackLeftTrim(s) || '" "')
-          : 'none',
-      });
+  });
+
+  function __wr(v) {
+    return v[0] == '-' ? '"' + v.substr(1) + '"' : v;
+  }
+  mn('ff', (p, s) => {
+    return (s = p.suffix) && styleWrap({
+      fontFamily: map(
+          spaceNormalize(s[0] == '_' ? snackLeftTrim(s) : toKebabCase(s))
+              .split(/(?:\s*,\s*)+/)
+          , __wr).join(','),
+    }, 1);
+  });
+  mn('cnt', (p, s) => {
+    return styleWrap({
+      content: (s = p.suffix)
+        ? spaceNormalize(
+          s[0] == '_' ? (snackLeftTrim(s) || '" "') : toKebabCase(s),
+        )
+        : 'none',
     });
-    mn('rs', (p, s) => {
-      return (s = p.suffix) ? styleWrap({
-        borderRadius: normalize(snackLeftTrim(s)),
-      }) : 0;
-    });
-  })();
+  });
+
 
   forIn({
     '': 'width',

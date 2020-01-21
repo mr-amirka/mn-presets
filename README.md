@@ -14,13 +14,10 @@
 
 
 
-See docs:  
-[styles.minimalist-notation.org](https://styles.minimalist-notation.org)
-
-
 
 #### Auto prefixes
 
+See source:  
 [mn-presets/prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/prefixes.js)  
 [mn-presets/runtime-prefixes.js](https://github.com/mr-amirka/mn-presets/blob/master/runtime-prefixes.js)  
 
@@ -34,8 +31,10 @@ See source:
 
 ```js
 module.exports = (mn) => {
-  const {media} = mn;
-  mn.utils.forEach([
+  const {media, utils} = mn;
+  const {forEach} = utils;
+
+  forEach([
     // mobile
     ['m', '(max-width: 992px)'],
     ['m2', '(max-width: 768px)'],
@@ -63,29 +62,59 @@ module.exports = (mn) => {
     // if has mouse, touch pad, advanced stylus digitizers
     ['mouse', '(pointer: fine) and (hover: hover)'],
 
-  ], (v, i) => (media[v[0]] = {query: v[1], priority: i}));
+  ], (v, i) => {
+    media[v[0]] = {query: v[1], priority: i};
+  });
+
+  // user agents
+  forEach([
+    'linux', 'mozilla', 'firefox', 'opera', 'trident', 'edge',
+    'chrome', 'ubuntu', 'chromium', 'safari', 'msie', 'WebKit', 'AppleWebKit',
+    'mobile', 'ie', 'webtv', 'konqueror', 'blackberry', 'android', 'iron',
+    'iphone', 'ipod', 'ipad', 'mac', 'darwin', 'windows', 'freebsd',
+  ], (name) => {
+    media[name] = {selector: '.' + name};
+  });
 };
 ```
 
 
-**Example:**  
+**Examples:**  
 
-
-Input:  
 ```html
-<div m="ph15 ph10@m">...</div>
-```
-Output:  
+<div class="ph15 ph10@m w1100@d2">...</div>
+```  
 ```css
-[m~='ph15']{
+.ph15 {
   padding-left: 15px;
   padding-right: 15px;
 }
-@media (max-width: 991px) {
-  [m~='ph10@m']{
+@media (max-width: 992px) {
+  .ph10\@m {
     padding-left: 10px;
     padding-right: 10px;
   }
+}
+@media (min-width: 1200px) {
+  .w1100\@d2 {
+    width: 1100px;
+  }
+}
+```
+
+-------------------------
+```html
+<div class="bgE bgF@safari dB@ie">...</div>
+```
+```css
+.bgE {
+  background: #eee;
+}
+.safari .bgF\@safari {
+  background: #fff;
+}
+.ie .dB\@ie {
+  display: block;
 }
 ```
 
@@ -98,9 +127,10 @@ See source:
 
 | State name | Selectors                                        |
 | ---------- | ------------------------------------------------ |
-| h          | :hover                                           |
 | a          | :active                                          |
+| с          | :checked                                         |
 | f          | :focus                                           |
+| h          | :hover                                           |
 | i          | ::-webkit-input-placeholder, ::-moz-placeholder, :-ms-input-placeholder, ::placeholder  |
 | even       | :nth-child(2n)                                   |
 | odd        | :nth-child(2n+1)                                 |
@@ -126,18 +156,18 @@ See source:
 ```
 ```css
 .bg01\:odd:nth-child(2n+1) {
-  background: rgb(0,0,0);
+  background: #000;
   background: rgba(0,0,0,.07);
 }
 ```
 
 -------------------------
 ```html
-<div class="bg01:n[n3+1]">...</div>
+<div class="bg01:n[3n+1]">...</div>
 ```
 ```css
-.bg01\:n\[n3\+1\]:nth-child(n3+1) {
-  background: rgb(0,0,0);
+.bg01\:n\[3n\+1\]:nth-child(3n+1) {
+  background: #000;
   background: rgba(0,0,0,.07);
 }
 ```
@@ -148,7 +178,7 @@ See source:
 ```
 ```css
 .bg01\:not\[\.anyClass\]:not(.anyClass) {
-  background: rgb(0,0,0);
+  background: #000;
   background: rgba(0,0,0,.07);
 }
 ```
@@ -159,7 +189,7 @@ See source:
 ```
 ```css
 .bg01\:not\[\[class\*\=any\]\\\:hover\]:not([class*=any]:hover) {
-  background: rgb(0,0,0);
+  background: #000;
   background: rgba(0,0,0,.07);
 }
 ```

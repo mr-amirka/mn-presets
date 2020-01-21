@@ -5,9 +5,10 @@
 
 module.exports = (mn) => {
   mn.utils.extend(mn.states, {
-    h: [':hover'],
     a: [':active'],
+    c: [':checked'],
     f: [':focus'],
+    h: [':hover'],
     i: [
       '::-webkit-input-placeholder',
       '::-moz-placeholder',

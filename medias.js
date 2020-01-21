@@ -4,9 +4,10 @@
  */
 
 module.exports = (mn) => {
-  const {media} = mn;
+  const {media, utils} = mn;
+  const {forEach} = utils;
   /*
-  mn.utils.forEach([
+  forEach([
     [ 'sm', '(max-width: 991px)' ],
     [ 'sm-md', '(min-width: 768px) and (max-width: 991px)' ],
     [ 'xs', '(max-width: 767px)' ],
@@ -23,7 +24,7 @@ module.exports = (mn) => {
   ], (v, i) => media[v[0]] = {query: v[1], priority: i});
 */
 
-  mn.utils.forEach([
+  forEach([
     // mobile
     ['m', '(max-width: 992px)'],
     ['m2', '(max-width: 768px)'],
@@ -51,5 +52,17 @@ module.exports = (mn) => {
     // if has mouse, touch pad, advanced stylus digitizers
     ['mouse', '(pointer: fine) and (hover: hover)'],
 
-  ], (v, i) => (media[v[0]] = {query: v[1], priority: i}));
+  ], (v, i) => {
+    media[v[0]] = {query: v[1], priority: i};
+  });
+
+  // user agents
+  forEach([
+    'linux', 'mozilla', 'firefox', 'opera', 'trident', 'edge',
+    'chrome', 'ubuntu', 'chromium', 'safari', 'msie', 'WebKit', 'AppleWebKit',
+    'mobile', 'ie', 'webtv', 'konqueror', 'blackberry', 'android', 'iron',
+    'iphone', 'ipod', 'ipad', 'mac', 'darwin', 'windows', 'freebsd',
+  ], (name) => {
+    media[name] = {selector: '.' + name};
+  });
 };
