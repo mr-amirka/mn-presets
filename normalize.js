@@ -25,7 +25,7 @@ module.exports = (mn) => {
     /**
      * Remove the margin in all browsers.
      */
-    body: 'm0',
+    body: 'm',
 
     /**
      * Render the `main` element consistently in IE.
@@ -36,7 +36,7 @@ module.exports = (mn) => {
      * Correct the font size and margin on `h1` elements within `section` and
      * `article` contexts in Chrome, Firefox, and Safari.
      */
-    h1: 'f2em mv0\\.67em mh0',
+    h1: 'f2em mv0\\.67em mh',
 
     /* Grouping content
   ========================================================================== */
@@ -110,7 +110,7 @@ module.exports = (mn) => {
      * 1. Change the font styles in all browsers.
      * 2. Remove the margin in Firefox and Safari.
      */
-    'button, input, optgroup, select, textarea': 'ffInherit f100% lh115% m0',
+    'button, input, optgroup, select, textarea': 'ffInherit f100% lh115% m',
 
     /**
      * Show the overflow in IE.
@@ -132,7 +132,7 @@ module.exports = (mn) => {
     /**
      * Remove the inner border and padding in Firefox.
      */
-    '(button|[type=(button|reset|submit)])::-moz-focus-inner': 'bsNone p0',
+    '(button|[type=(button|reset|submit)])::-moz-focus-inner': 'bsNone p',
 
     /**
      * Restore the focus styles unset by the previous rule.

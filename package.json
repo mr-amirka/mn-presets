@@ -1,7 +1,7 @@
 {
   "name": "mn-presets",
-  "version": "0.0.29",
-  "description": "presets for minimalist-notation",
+  "version": "0.0.31",
+  "description": "Presets for Minimalist-Notation",
   "keywords": [
     "style",
     "media query",

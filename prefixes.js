@@ -3,14 +3,26 @@
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
+const // eslint-disable-line
+  WEBKIT = '-webkit-',
+  MOZ = '-moz-',
+  OPERA = '-o-',// eslint-disable-line
+  MS = '-ms-'; // eslint-disable-line
+  KHTML = '-khtml-'; // eslint-disable-line
+
 module.exports = (mn) => {
   const {utils, propertiesStringify} = mn;
-  const {flags} = utils;
+  const {flags, extend} = utils;
+  const {prefixedAttrs} = propertiesStringify;
   flags([
-    '-webkit-', '-moz-', '-o-', '-ms-', '-khtml-',
+    WEBKIT, MOZ,
   ], propertiesStringify.prefixes);
+
+  extend(prefixedAttrs, {
+    appearance: flags([WEBKIT]),
+  });
+
   flags([
-    'appearance',
     'backgroundClip',
     'transform',
     'transformStyle',
@@ -36,5 +48,5 @@ module.exports = (mn) => {
     'opacity',
     'boxSizing',
     'textSizeAdjust',
-  ], propertiesStringify.prefixedAttrs);
+  ], prefixedAttrs);
 };

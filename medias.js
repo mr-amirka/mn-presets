@@ -59,7 +59,7 @@ module.exports = (mn) => {
   // user agents
   forEach([
     'linux', 'mozilla', 'firefox', 'opera', 'trident', 'edge',
-    'chrome', 'ubuntu', 'chromium', 'safari', 'msie', 'WebKit', 'AppleWebKit',
+    'chrome', 'ubuntu', 'chromium', 'safari', 'msie', 'webkit', 'applewebkit',
     'mobile', 'ie', 'webtv', 'konqueror', 'blackberry', 'android', 'iron',
     'iphone', 'ipod', 'ipad', 'mac', 'darwin', 'windows', 'freebsd',
   ], (name) => {

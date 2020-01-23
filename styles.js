@@ -38,14 +38,16 @@ function normalizeValue(p) {
   const {value} = p;
   return value == '0' ? value : (value + (p.unit || 'px'));
 }
-function normalizeDefault(p, priority, def) {
+function normalizeDefault(p, def) {
   return {
     exts: [p.name + (def || 0) + p.ni],
-    priority: priority || 0,
   };
 }
 function stylePosition(position, priority) {
   return styleWrap({position: position}, priority);
+}
+function upperCase(v) {
+  return v.toUpperCase();
 }
 
 module.exports = (mn) => {
@@ -72,14 +74,16 @@ module.exports = (mn) => {
 
   function synonymProvider(propName, synonyms, priority) {
     return (p, s, style, synonym) => {
-      synonym = synonyms[s = p.suffix];
-      return synonym || s
-        ? (style = {}, style[propName] = synonym || spaceNormalize(
-            s[0] == '_'
-              ? snackLeftTrim(s)
-              : toKebabCase(s),
-        ), styleWrap(style, priority))
-        : 0;
+      return (synonym = synonyms[s = p.suffix])
+        ? normalizeDefault(p, synonym)
+        : (
+          s ? (style = {}, style[propName] = spaceNormalize(
+              s[0] == '_'
+                ? snackLeftTrim(s)
+                : toKebabCase(s),
+          ), styleWrap(style, priority))
+          : 0
+        );
     };
   }
 
@@ -106,7 +110,6 @@ module.exports = (mn) => {
 
   forIn(defaultSides, (sides, suffix) => {
     const priority = suffix ? (4 - size(sides)) : 0;
-    const synonyms = {A: 'auto'};
 
     function sidesSetter(handle) {
       const propsMap = {};
@@ -121,12 +124,14 @@ module.exports = (mn) => {
     }
     function handleProvider(sidesSet) {
       return (p, camel) => {
-        return p.value ? styleWrap(
-            sidesSet(((camel = p.camel)
-              ? synonyms[camel] || toKebabCase(camel)
-              : normalizeValue(p))),
-            priority,
-        ) : normalizeDefault(p, priority);
+        return (camel = p.camel) === 'A'
+          ? normalizeDefault(p, 'Auto')
+          : (
+            p.value ? styleWrap(
+                sidesSet(camel ? toKebabCase(camel) : normalizeValue(p)),
+                priority,
+            ) : normalizeDefault(p)
+          );
       };
     }
 
@@ -157,7 +162,7 @@ module.exports = (mn) => {
       mn('bs' + suffix, (p, v) => {
         return (v = p.suffix)
           ? styleWrap(sidesSet(toKebabCase(v)), priority)
-          : normalizeDefault(p, priority, 'solid');
+          : normalizeDefault(p, 'Solid');
       });
     })(sidesSetter((side) => 'border' + side + '-style'));
 
@@ -165,15 +170,15 @@ module.exports = (mn) => {
       mn('bc' + suffix, (p, v) => {
         return (v = p.value)
           ? styleWrap(sidesSet(getColor(v)), priority)
-          : normalizeDefault(p, priority);
+          : normalizeDefault(p);
       }, colorPattern);
     })(sidesSetter((side) => 'border' + side + '-color'));
   });
 
 
   const sizeSynonyms = {
-    A: 'auto',
-    N: 'none',
+    A: 'Auto',
+    N: 'None',
   };
   forIn({
     sq: ['width', 'height'],
@@ -190,17 +195,18 @@ module.exports = (mn) => {
         propMap[sfx ? (sfx + '-' + propName) : propName] = 1;
       }
       mn(essencePrefix + sfx, (p) => {
-        if (!p.value) return normalizeDefault(p, priority, '100%');
-        const {sign, camel} = p;
+        if (!p.value) return normalizeDefault(p, '100%');
+        const camel = p.camel;
+        const synonym = camel && sizeSynonyms[camel];
+        if (synonym) return normalizeDefault(p, synonym);
+        const sign = p.sign;
         const num = p.negative ? 0 : p.num;
         const style = {};
         let propName, v; // eslint-disable-line
-        const sz = camel
-          ? sizeSynonyms[camel] || toKebabCase(camel)
-          : (
-            v = (num ? (num == '0' ? num: (num + (p.unit || 'px'))) : '100%'),
-            sign ? 'calc(' + v + ' ' + sign + ' ' + p.add + 'px)' : v
-          );
+        const sz = camel ? toKebabCase(camel) : (
+          v = (num ? (num == '0' ? num: (num + (p.unit || 'px'))) : '100%'),
+          sign ? 'calc(' + v + ' ' + sign + ' ' + p.add + 'px)' : v
+        );
         for (propName in propMap) style[propName] = sz; // eslint-disable-line
         return styleWrap(style, priority);
       }, '(([-+]):sign([0-9]+):add)$');
@@ -253,9 +259,13 @@ module.exports = (mn) => {
     end: {boxPack: 'end', justifyContent: 'flex-end'},
     around: {justifyContent: 'space-around'},
     between: {boxPack: 'justify', justifyContent: 'space-between'},
-  }, (style, essenceName) => mn(
-      'fha' + upperFirst(essenceName), styleWrap(style, 1),
-  ));
+  }, (style, essenceName, name) => {
+    mn(
+        name = 'fha' + (essenceName = upperFirst(essenceName)),
+        styleWrap(style, 1),
+    );
+    mn('fha' + essenceName[0], name);
+  });
 
   // flex vertical align
   forIn({
@@ -279,9 +289,19 @@ module.exports = (mn) => {
       alignItems: 'stretch',
       alignContent: 'stretch',
     },
-  }, (style, essenceName) => mn(
-      'fva' + upperFirst(essenceName), styleWrap(style, 1),
-  ));
+  }, (style, essenceName) => {
+    mn('fva' + upperFirst(essenceName), styleWrap(style, 1));
+  });
+
+  forIn({
+    S: 'Start',
+    C: 'Center',
+    E: 'End',
+    A: 'Around',
+    ST: 'Stretch',
+  }, (essenceName, abbr) => {
+    mn('fva' + abbr, 'fva' + essenceName);
+  });
 
   forIn({
     dn: 'transitionDuration',
@@ -289,8 +309,8 @@ module.exports = (mn) => {
   }, (propName, essenceName) => {
     mn(essenceName, (p, num) => {
       return p.camel || p.negative ? 0 : ((num = p.num)
-        ? styleWrap({[propName]: num + 'ms'})
-        : normalizeDefault(p, 1, 250)
+        ? styleWrap({[propName]: num + 'ms'}, 1)
+        : normalizeDefault(p, 250)
       );
     });
   });
@@ -352,15 +372,17 @@ module.exports = (mn) => {
   });
 
   const fontWeightSynonyms = {
-    N: 'normal',
-    B: 'bold',
-    BR: 'bolder',
-    LR: 'lighter',
+    N: 'Normal',
+    B: 'Bold',
+    BR: 'Bolder',
+    LR: 'Lighter',
   };
-  mn('fw', (p, camel) => {
-    return !p.negative && styleWrap({
-      fontWeight: (camel = p.camel)
-        ? fontWeightSynonyms[camel] || toKebabCase(camel)
+  mn('fw', (p, camel, synonym) => {
+    camel = p.camel;
+    synonym = camel && fontWeightSynonyms[camel];
+    return synonym ? normalizeDefault(p, synonym) : !p.negative && styleWrap({
+      fontWeight: camel
+        ? toKebabCase(camel)
         : (100 * intval(p.num, 1, 1, 9)),
     }, 1);
   });
@@ -388,7 +410,7 @@ module.exports = (mn) => {
         + ((p.y || '0') + (p.yu || 'px')) + ')'
         + (z ? (' translateZ(' + (z || '0') + (p.zu || 'px') + ')') : '')
         + (scale ? (' scale(' + (0.01 * scale) + ')') : '')
-        + (angle ? (' rotate' + p.dir.toUpperCase()
+        + (angle ? (' rotate' + upperCase(p.dir)
         + '(' + angle + (p.unit || 'deg') + ')') : ''),
     }); // eslint-disable-next-line
   }, '^(-?[0-9]+):x?(%):xu?([yY](-?[0-9]+):y(%):yu?)?([zZ](-?[0-9]+):z(%):zu?)?([sS]([0-9]+):s)?([rR](x|y|z):dir(-?[0-9]+):angle([a-z]+):unit?)?$');
@@ -408,11 +430,11 @@ module.exports = (mn) => {
   })();
 
   forEach(['x', 'y', 'z'], (suffix) => {
-    const prefix = 'rotate' + suffix.toUpperCase() + '(';
+    const prefix = 'rotate' + upperCase(suffix) + '(';
     mn('r' + suffix, (p, v) => {
       return (v = p.value) ? styleWrap({
         transform: prefix + v + (p.unit || 'deg') + ')',
-      }) : normalizeDefault(p, 0, 180);
+      }) : normalizeDefault(p, 180);
     });
   });
 
@@ -507,7 +529,7 @@ module.exports = (mn) => {
   mn('z', (p, num) => {
     return p.camel ? 0 : ((num = p.num) ? styleWrap({
       zIndex: num,
-    }) : normalizeDefault(p, 0, 1));
+    }) : normalizeDefault(p, 1));
   });
 
   mn('o', (p, num) => {
@@ -523,7 +545,7 @@ module.exports = (mn) => {
         lineHeight: num == '0' ? num : (
           unit === '%' ? toFixed(num * 0.01) : (num + (unit || 'px'))
         ),
-      }) : normalizeDefault(p, 0, '100%')
+      }) : normalizeDefault(p, '100%')
     );
   });
 
@@ -532,7 +554,7 @@ module.exports = (mn) => {
       textSizeAdjust: (camel = p.camel)
         ? toKebabCase(camel)
         : ((num = p.num) == '0' ? num : (num + (p.unit || 'px'))),
-    }) : normalizeDefault(p, 0, '100%'));
+    }) : normalizeDefault(p, '100%'));
   });
 
   mn('fsa', (p, num, camel) => {
@@ -552,164 +574,211 @@ module.exports = (mn) => {
   });
 
   mn('d', synonymProvider('display', {
-    '': 'block',
-    B: 'block',
-    N: 'none',
-    F: 'flex',
-    IF: 'inline-flex',
-    I: 'inline',
-    IB: 'inline-block',
-    LI: 'list-item',
-    RI: 'run-in',
-    CP: 'compact',
-    TB: 'table',
-    ITB: 'inline-table',
-    TBCP: 'table-caption',
-    TBCL: 'table-column',
-    TBCLG: 'table-column-group',
-    TBHG: 'table-header-group',
-    TBFG: 'table-footer-group',
-    TBR: 'table-row',
-    TBRG: 'table-row-group',
-    TBC: 'table-cell',
-    RB: 'ruby',
-    RBB: 'ruby-base',
-    RBBG: 'ruby-base-group',
-    RBT: 'ruby-text',
-    RBTG: 'ruby-text-group',
+    '': 'Block',
+    B: 'Block',
+    N: 'None',
+    F: 'Flex',
+    IF: 'InlineFlex',
+    I: 'Inline',
+    IB: 'InlineBlock',
+    LI: 'ListItem',
+    RI: 'RunIn',
+    CP: 'Compact',
+    TB: 'Table',
+    ITB: 'InlineTable',
+    TBCP: 'TableCaption',
+    TBCL: 'TableColumn',
+    TBCLG: 'TableColumnGroup',
+    TBHG: 'TableHeaderGroup',
+    TBFG: 'TableFooterGroup',
+    TBR: 'TableRow',
+    TBRG: 'TableRowGroup',
+    TBC: 'TableCell',
+    RB: 'Ruby',
+    RBB: 'RubyBase',
+    RBBG: 'RubyBaseGroup',
+    RBT: 'RubyText',
+    RBTG: 'RubyTextGroup',
   }));
 
   mn('cl', synonymProvider('clear', {
-    '': 'both',
-    B: 'both',
-    N: 'none',
-    L: 'left',
-    R: 'right',
+    '': 'Both',
+    B: 'Both',
+    N: 'None',
+    L: 'Left',
+    R: 'Right',
   }));
 
   mn('v', synonymProvider('visibility', {
-    '': 'hidden',
-    V: 'visible',
-    H: 'hidden',
-    C: 'collapse',
+    '': 'Hidden',
+    V: 'Visible',
+    H: 'Hidden',
+    C: 'Collapse',
   }));
 
   forIn({'': 0, x: 1, y: 1}, (priority, suffix) => {
-    mn('ov' + suffix, synonymProvider('overflow' + suffix.toUpperCase(), {
-      '': 'hidden',
-      V: 'visible',
-      H: 'hidden',
-      S: 'scroll',
-      A: 'auto',
+    mn('ov' + suffix, synonymProvider('overflow' + upperCase(suffix), {
+      '': 'Hidden',
+      V: 'Visible',
+      H: 'Hidden',
+      S: 'Scroll',
+      A: 'Auto',
     }, priority));
   });
 
   mn('ovs', synonymProvider('overflowStyle', {
-    '': 'scrollbar',
-    S: 'scrollbar',
-    A: 'auto',
-    P: 'panner',
-    M: 'move',
-    MQ: 'marquee',
+    '': 'Scrollbar',
+    S: 'Scrollbar',
+    A: 'Auto',
+    P: 'Panner',
+    M: 'Move',
+    MQ: 'Marquee',
   }));
 
   mn('cp', synonymProvider('clip', {
-    A: 'auto',
-    R: 'rect(top right bottom left)',
+    A: 'Auto',
+    R: 'Rect\\(top_right_bottom_left\\)',
   }));
 
   mn('rsz', synonymProvider('resize', {
-    '': 'none',
-    N: 'none',
-    B: 'both',
-    H: 'horizontal',
-    V: 'vertical',
+    '': 'None',
+    N: 'None',
+    B: 'Both',
+    H: 'Horizontal',
+    V: 'Vertical',
   }));
 
   mn('cr', synonymProvider('cursor', {
-    '': 'pointer',
-    A: 'auto',
-    D: 'default',
-    C: 'crosshair',
-    HA: 'hand',
-    HE: 'help',
-    M: 'move',
-    P: 'pointer',
-    T: 'text',
+    '': 'Pointer',
+    A: 'Auto',
+    D: 'Default',
+    C: 'Crosshair',
+    HA: 'Hand',
+    HE: 'Help',
+    M: 'Move',
+    P: 'Pointer',
+    T: 'Text',
   }));
 
   mn('jc', synonymProvider('justifyContent', {
-    '': 'center',
-    C: 'center',
-    FE: 'flex-end',
-    FS: 'flex-start',
-    SA: 'space-around',
-    SB: 'space-between',
-  }));
-
-  mn('jc', synonymProvider('justifyContent', {
-    '': 'center',
-    C: 'center',
-    FE: 'flex-end',
-    FS: 'flex-start',
-    SA: 'space-around',
-    SB: 'space-between',
+    '': 'Center',
+    C: 'Center',
+    FE: 'FlexEnd',
+    FS: 'FlexStart',
+    SA: 'SpaceAround',
+    SB: 'SpaceBetween',
   }));
 
   mn('ai', synonymProvider('alignItems', {
-    '': 'center',
-    C: 'center',
-    B: 'baseline',
-    FE: 'flex-end',
-    FS: 'flex-start',
-    S: 'stretch',
+    '': 'Center',
+    C: 'Center',
+    B: 'Baseline',
+    FE: 'FlexEnd',
+    FS: 'FlexStart',
+    S: 'Stretch',
   }));
 
   mn('bxz', synonymProvider('boxSizing', {
-    '': 'border-box',
-    BB: 'border-box',
-    CB: 'content-box',
+    '': 'BorderBox',
+    BB: 'BorderBox',
+    CB: 'ContentBox',
   }));
 
   mn('fs', synonymProvider('fontStyle', {
-    '': 'italic',
-    N: 'normal',
-    I: 'italic',
-    O: 'oblique',
+    '': 'Italic',
+    N: 'Normal',
+    I: 'Italic',
+    O: 'Oblique',
   }, 1));
 
   mn('fv', synonymProvider('fontVariant', {
-    N: 'normal',
-    SC: 'small-caps',
+    N: 'Normal',
+    SC: 'SmallCaps',
   }, 1));
 
   mn('fef', synonymProvider('fontEffect', {
-    N: 'none',
-    EG: 'engrave',
-    EB: 'emboss',
-    O: 'outline',
+    N: 'None',
+    EG: 'Engrave',
+    EB: 'Emboss',
+    O: 'Outline',
   }, 1));
 
   mn('fsm', synonymProvider('fontSmooth', {
-    A: 'auto',
-    N: 'never',
-    AW: 'always',
+    A: 'Auto',
+    N: 'Never',
+    AW: 'Always',
   }, 1));
 
   mn('fst', synonymProvider('fontStretch', {
-    N: 'normal',
-    UC: 'ultra-condensed',
-    EC: 'extra-condensed',
-    C: 'condensed',
-    SC: 'semi-condensed',
-    SE: 'semi-expanded',
-    E: 'expanded',
-    EE: 'extra-expanded',
-    UE: 'ultra-expanded',
+    N: 'Normal',
+    UC: 'UltraCondensed',
+    EC: 'ExtraCondensed',
+    C: 'Condensed',
+    SC: 'SemiCondensed',
+    SE: 'SemiExpanded',
+    E: 'Expanded',
+    EE: 'ExtraExpanded',
+    UE: 'UltraExpanded',
   }, 1));
+
+  mn('tal', synonymProvider('textAlignLast', {
+    A: 'Auto',
+    L: 'Left',
+    C: 'Center',
+    R: 'Right',
+    J: 'Justify',
+    E: 'End',
+    S: 'Start',
+  }, 1));
+
+  const tdSynonyms = {
+    '': 'None',
+    N: 'None',
+    U: 'Underline',
+    O: 'Overline',
+    L: 'LineThrough',
+  };
+  mn('td', synonymProvider('textDecoration', tdSynonyms));
+  mn('tdl', synonymProvider('textDecorationLine', tdSynonyms, 1));
+
+  mn('tj', synonymProvider('textJustify', {
+    A: 'Auto',
+    IW: 'InterWord',
+    II: 'InterIdeograph',
+    IC: 'InterCluster',
+    D: 'Distribute',
+    K: 'Kashida',
+    T: 'Tibetan',
+  }));
+
+  mn('tov', synonymProvider('textOverflow', {
+    '': 'Ellipsis',
+    C: 'Clip',
+    E: 'Ellipsis',
+  }));
+
+  mn('tt', synonymProvider('textTransform', {
+    '': 'Uppercase',
+    N: 'None',
+    C: 'Capitalize',
+    U: 'Uppercase',
+    L: 'Lowercase',
+    FL: 'FullWidth',
+    FSK: 'FullSizeKana',
+  }));
+
+  mn('tw', synonymProvider('textWrap', {
+    N: 'Normal',
+    NO: 'None',
+    U: 'Unrestricted',
+    S: 'Suppress',
+  }));
+
 
   forIn({
     apc: ['appearance'],
+
+    ti: ['textIndent'],
 
     tn: ['transition'],
     tp: ['transitionProperty', 1],
@@ -754,13 +823,9 @@ module.exports = (mn) => {
     or: ['order'],
     as: ['alignSelf'],
     ac: ['alignContent'],
-    tt: ['textTransform'],
-    td: ['textDecoration'],
-    tdl: ['textDecorationLine', 1],
     tds: ['textDecorationSkip', 1],
     tdsi: ['textDecorationSkipInk', 2],
     tdt: ['textDecorationThickness', 1],
-    to: ['textOverflow'],
 
     ws: ['whiteSpace'],
     va: ['verticalAlign'],
