@@ -1,5 +1,5 @@
 /**
- * @overview MinimalistNotation preset "main"
+ * @overview Minimalist-Notation preset "main"
  * @author Amir Absolutely <mr.amirka@ya.ru>
  * @dependencies
  * mn-presets/styles

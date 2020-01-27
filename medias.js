@@ -1,5 +1,5 @@
 /**
- * @overview Minimalist Notation preset "default medias"
+ * @overview Minimalist-Notation preset "default medias"
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 

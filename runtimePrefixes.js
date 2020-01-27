@@ -1,5 +1,5 @@
 /**
- * @overview MinimalistNotation preset "runtime prefixes"
+ * @overview Minimalist-Notation preset "runtime prefixes"
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 

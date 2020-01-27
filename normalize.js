@@ -1,5 +1,5 @@
 /**
- * @overview MinimalistNotation preset "normalize.css"
+ * @overview Minimalist-Notation preset "normalize.css"
  * @description This is a fork of the normalize.css v8.0.1
  * | github.com/necolas/normalize.css
  * @dependencies

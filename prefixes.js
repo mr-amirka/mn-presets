@@ -1,5 +1,5 @@
 /**
- * @overview MinimalistNotation preset "prefixes"
+ * @overview Minimalist-Notation preset "prefixes"
  * @author Amir Absolutely <mr.amirka@ya.ru>
  */
 
