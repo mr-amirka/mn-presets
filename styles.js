@@ -1,6 +1,6 @@
 /**
  * @overview Minimalist-Notation preset "default styles"
- * @author Amir Absolutely <mr.amirka@ya.ru>
+ * @author Amir Absalyamov <mr.amirka@ya.ru>
  */
 
 /* eslint quote-props: ["error", "as-needed"] */
@@ -95,6 +95,17 @@ const fontWeightSynonyms = {
   B: 'Bold',
   BR: 'Bolder',
   LR: 'Lighter',
+};
+const outlineStyleSynonyms = {
+  N: 'None',
+  DT: 'Dotted',
+  DS: 'Dashed',
+  S: 'Solid',
+  DB: 'Double',
+  G: 'Groove',
+  R: 'Ridge',
+  I: 'Inset',
+  O: 'Outset',
 };
 const SHADOW_HANDLERS = {
   bxsh: ['boxShadow', function(x, y, value, r, color) {
@@ -909,17 +920,8 @@ module.exports = (mn) => {
       RU: `'\\00AB'_'\\00BB'_'\\201E'_'\\201C'`,
       EN: `'\\201C'_'\\201D'_'\\2018'_'\\2019'`,
     }, 1),
-    ols: synonymProvider('outlineStyle', {
-      N: 'None',
-      DT: 'Dotted',
-      DS: 'Dashed',
-      S: 'Solid',
-      DB: 'Double',
-      G: 'Groove',
-      R: 'Ridge',
-      I: 'Inset',
-      O: 'Outset',
-    }, 1),
+    ol: synonymProvider('outline', outlineStyleSynonyms),
+    ols: synonymProvider('outlineStyle', outlineStyleSynonyms, 1),
     cps: synonymProvider('captionSide', {
       T: 'Top',
       B: 'Bottom',
@@ -1102,8 +1104,6 @@ module.exports = (mn) => {
 
     bgs: ['backgroundSize', 1],
     bgcp: ['backgroundClip', 1],
-
-    ol: ['outline'],
 
     g: ['grid'],
     gt: ['gridTemplate', 1],

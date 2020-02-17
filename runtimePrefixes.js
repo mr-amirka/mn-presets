@@ -1,6 +1,6 @@
 /**
  * @overview Minimalist-Notation preset "runtime prefixes"
- * @author Amir Absolutely <mr.amirka@ya.ru>
+ * @author Amir Absalyamov <mr.amirka@ya.ru>
  */
 
 module.exports = (mn) => {

@@ -1,6 +1,6 @@
 /**
  * @overview Minimalist-Notation preset "main"
- * @author Amir Absolutely <mr.amirka@ya.ru>
+ * @author Amir Absalyamov <mr.amirka@ya.ru>
  * @dependencies
  * mn-presets/styles
  * mn-presets/medias

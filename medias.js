@@ -1,6 +1,6 @@
 /**
  * @overview Minimalist-Notation preset "default medias"
- * @author Amir Absolutely <mr.amirka@ya.ru>
+ * @author Amir Absalyamov <mr.amirka@ya.ru>
  */
 
 module.exports = (mn) => {

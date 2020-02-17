@@ -1,6 +1,6 @@
 {
   "name": "mn-presets",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "Presets for Minimalist-Notation",
   "keywords": [
     "style",
@@ -21,7 +21,7 @@
     "normalize"
   ],
   "author": {
-    "name": "Amir Absolutely",
+    "name": "Amir Absalyamov",
     "email": "mr.amirka@ya.ru",
     "url": "https://github.com/mr-amirka"
   },
