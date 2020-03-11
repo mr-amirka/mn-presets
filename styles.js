@@ -897,6 +897,7 @@ module.exports = (mn) => {
       B: 'BreakWord',
     }),
     bgr: synonymProvider('backgroundRepeat', {
+      '': 'Repeat',
       R: 'Repeat',
       N: 'NoRepeat',
       X: 'RepeatX',
