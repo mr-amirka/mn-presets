@@ -870,6 +870,7 @@ module.exports = (mn) => {
       N: 'Normal',
     }),
     ws: synonymProvider('whiteSpace', {
+      '': 'Nowrap',
       N: 'Normal',
       P: 'Pre',
       NW: 'Nowrap',

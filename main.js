@@ -15,15 +15,15 @@ module.exports = (mn) => {
     },
   });
   mn.assign({
-    '*, *:before, *:after': 'bxzBorderBox',
-    html: 'ovxHidden tsa',
-    body: 'm0 ovxHidden',
-    a: 'crPointer@mouse',
-    img: 'wmax dBlock mhAuto b0',
-    iframe: 'dBlock b0',
+    '*, *:before, *:after': 'bxzBB',
+    html: 'ovxH tsa',
+    body: 'm0 ovxH',
+    a: 'crP@mouse',
+    img: 'wmax dB mhA b0',
+    iframe: 'dB b0',
     // eslint-disable-next-line
     'aside, article, main, section, header, footer, nav, video, canvas, input, textarea':
-      'dBlock',
+      'dB',
   });
   // assign('[m~="container"]', '(mhAuto|ph10|w970@md|w1170@lg|w1570@ll)');
 };
