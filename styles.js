@@ -292,7 +292,11 @@ module.exports = (mn) => {
     });
     mn('bc' + suffix, (p, v) => {
       return (v = p.value)
-        ? styleWrap(bcSidesSet(getColor(v)), priority + 1)
+        ? styleWrap(bcSidesSet(
+          p.suffix === 'CT'
+            ? 'currentColor'
+            : getColor(v || '0'),
+        ), priority + 1)
         : normalizeDefault(p);
     }, COLOR_PATTERN, 1);
     mn('bi' + suffix, (p, s) => {
@@ -423,10 +427,16 @@ module.exports = (mn) => {
   }, (options, pfx) => {
     const propName = options[0];
     const priority = options[1] || 0;
-    mn(pfx, (p) => {
-      const style = {};
-      style[propName] = getColor(p.value || '0');
-      return styleWrap(style, priority);
+    mn(pfx, (p, v, s) => {
+      return (v = p.value)
+        ? (
+          s = {},
+          s[propName] = p.suffix === 'CT'
+            ? 'currentColor'
+            : getColor(v || '0'),
+          styleWrap(s, priority)
+        )
+        : normalizeDefault(p);
     }, COLOR_PATTERN);
   });
 
